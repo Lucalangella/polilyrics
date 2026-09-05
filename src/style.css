@@ -807,62 +807,66 @@ button,
 /* ==========================================================================
    5.5 Hero Billboard Experiment & Search Landing
    ========================================================================== */
-/* Hardware acceleration & anti-flicker optimizations */
+/* Infinite Marquee Optimizations - Uses 2D translateX to avoid 3D compositing memory limits */
 .marquee-wrapper {
-  will-change: transform;
-  transform: translate3d(0, 0, 0);
-  -webkit-transform: translate3d(0, 0, 0);
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
+  /* Lightweight hardware-accelerated wrapper without monolithic texture caching */
 }
 
 @keyframes scroll-left {
-  from {
-    transform: translate3d(0, 0, 0);
-    -webkit-transform: translate3d(0, 0, 0);
+  0% {
+    transform: translateX(0);
+    -webkit-transform: translateX(0);
   }
-  to {
-    transform: translate3d(-50%, 0, 0);
-    -webkit-transform: translate3d(-50%, 0, 0);
+  100% {
+    transform: translateX(-50%);
+    -webkit-transform: translateX(-50%);
   }
 }
 
 @keyframes scroll-right {
-  from {
-    transform: translate3d(-50%, 0, 0);
-    -webkit-transform: translate3d(-50%, 0, 0);
+  0% {
+    transform: translateX(-50%);
+    -webkit-transform: translateX(-50%);
   }
-  to {
-    transform: translate3d(0, 0, 0);
-    -webkit-transform: translate3d(0, 0, 0);
+  100% {
+    transform: translateX(0);
+    -webkit-transform: translateX(0);
   }
 }
 
 /* Background album cover speeds */
 .animate-marquee-left {
   animation: scroll-left 55s linear infinite;
+  -webkit-animation: scroll-left 55s linear infinite;
 }
 
 .animate-marquee-right {
   animation: scroll-right 65s linear infinite;
+  -webkit-animation: scroll-right 65s linear infinite;
 }
 
 .animate-marquee-left-fast {
   animation: scroll-left 48s linear infinite;
+  -webkit-animation: scroll-left 48s linear infinite;
 }
 
 /* Foreground song pills ticker speeds */
 .animate-pills-left {
   animation: scroll-left 40s linear infinite;
+  -webkit-animation: scroll-left 40s linear infinite;
 }
 
 .animate-pills-right {
   animation: scroll-right 45s linear infinite;
+  -webkit-animation: scroll-right 45s linear infinite;
 }
 
-.animate-pills-left:hover,
-.animate-pills-right:hover {
-  animation-play-state: paused;
+/* Only pause on hover on devices that have a real pointer/mouse (never on touch screens like iPhone) */
+@media (hover: hover) and (pointer: fine) {
+  .animate-pills-left:hover,
+  .animate-pills-right:hover {
+    animation-play-state: paused;
+  }
 }
 
 .cover-card {
@@ -894,23 +898,23 @@ button,
 /* Background Billboard Wrapper */
 .billboard-background-wrapper {
   position: absolute;
-  inset: 0;
+  inset: -20% -10%;
   overflow: hidden;
   pointer-events: none;
-  opacity: 0.45;
+  opacity: 0.50;
   z-index: 0;
   display: flex;
   flex-direction: column;
   justify-content: center;
   gap: 1.5rem;
-  transform: rotate(-6deg) scale(1.15);
-  -webkit-transform: rotate(-6deg) scale(1.15);
+  transform: rotate(-6deg) scale(1.1);
+  -webkit-transform: rotate(-6deg) scale(1.1);
   transform-origin: center center;
   -webkit-transform-origin: center center;
 }
 
 [data-theme="light"] .billboard-background-wrapper {
-  opacity: 0.25;
+  opacity: 0.28;
 }
 
 .billboard-row-container {
@@ -922,6 +926,7 @@ button,
 .billboard-row {
   display: flex;
   gap: 1rem;
+  width: max-content;
   flex-shrink: 0;
 }
 
@@ -931,7 +936,11 @@ button,
   inset: 0;
   pointer-events: none;
   z-index: 1;
-  background: linear-gradient(to bottom, rgba(2, 6, 23, 0.40) 0%, rgba(2, 6, 23, 0.70) 50%, #020617 100%);
+  background: linear-gradient(to bottom, rgba(2, 6, 23, 0.35) 0%, rgba(2, 6, 23, 0.60) 50%, rgba(2, 6, 23, 0.85) 100%);
+}
+
+[data-theme="light"] .billboard-vignette-overlay {
+  background: linear-gradient(to bottom, rgba(248, 250, 252, 0.35) 0%, rgba(248, 250, 252, 0.65) 50%, rgba(248, 250, 252, 0.90) 100%);
 }
 
 [data-theme="light"] .billboard-vignette-overlay {
@@ -1238,6 +1247,7 @@ button,
 .song-pills-track {
   display: flex;
   gap: 0.75rem;
+  width: max-content;
   flex-shrink: 0;
 }
 

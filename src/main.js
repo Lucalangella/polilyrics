@@ -1478,34 +1478,35 @@ function setupAutocomplete({
  */
 
 // Curated, verified album artwork from legendary artists strictly across the 5 supported languages (EN, ES, FR, IT, DE)
+// Uses 200x200 Retina thumbnails (7 KB each) to prevent mobile/desktop GPU texture memory overflow
 const CURATED_BILLBOARD_COVERS = [
   // English
-  "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/f5/93/8c/f5938c49-964c-31d1-4b33-78b634f71fb7/190295978075.jpg/600x600bb.jpg", // Coldplay
-  "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/0e/c1/57/0ec1575f-5153-ac4b-d578-c5fa3a90bfe1/5021732511676.jpg/600x600bb.jpg", // Dua Lipa
-  "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/4d/08/2a/4d082a9e-7898-1aa1-a02f-339810058d9e/14DMGIM05632.rgb.jpg/600x600bb.jpg", // Queen
-  "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/eb/ca/25/ebca2596-cd1e-b295-91a3-771c868d0a79/191404113868.png/600x600bb.jpg", // Adele
-  "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/fa/5b/89/fa5b898d-bad6-e053-4195-260e5c74f2bb/00602567725466.rgb.jpg/600x600bb.jpg", // The Beatles
+  "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/f5/93/8c/f5938c49-964c-31d1-4b33-78b634f71fb7/190295978075.jpg/200x200bb.jpg", // Coldplay
+  "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/0e/c1/57/0ec1575f-5153-ac4b-d578-c5fa3a90bfe1/5021732511676.jpg/200x200bb.jpg", // Dua Lipa
+  "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/4d/08/2a/4d082a9e-7898-1aa1-a02f-339810058d9e/14DMGIM05632.rgb.jpg/200x200bb.jpg", // Queen
+  "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/eb/ca/25/ebca2596-cd1e-b295-91a3-771c868d0a79/191404113868.png/200x200bb.jpg", // Adele
+  "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/fa/5b/89/fa5b898d-bad6-e053-4195-260e5c74f2bb/00602567725466.rgb.jpg/200x200bb.jpg", // The Beatles
   // Spanish
-  "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/2c/55/e1/2c55e13f-15d8-1c7c-1826-c5fa55deaa8f/886447217139.jpg/600x600bb.jpg", // Rosalía
-  "https://is1-ssl.mzstatic.com/image/thumb/Music118/v4/77/20/38/77203815-7c88-906d-a4d2-578474f244b6/886447379585.jpg/600x600bb.jpg", // C. Tangana
-  "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/77/32/74/7732746d-25e5-baae-b921-bad4a07d87b1/19UMGIM55524.rgb.jpg/600x600bb.jpg", // Bad Bunny
-  "https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/05/d7/e1/05d7e189-c4d5-331f-0327-da3add4bae06/16UMGIM14728.rgb.jpg/600x600bb.jpg", // Álvaro Soler
+  "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/2c/55/e1/2c55e13f-15d8-1c7c-1826-c5fa55deaa8f/886447217139.jpg/200x200bb.jpg", // Rosalía
+  "https://is1-ssl.mzstatic.com/image/thumb/Music118/v4/77/20/38/77203815-7c88-906d-a4d2-578474f244b6/886447379585.jpg/200x200bb.jpg", // C. Tangana
+  "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/77/32/74/7732746d-25e5-baae-b921-bad4a07d87b1/19UMGIM55524.rgb.jpg/200x200bb.jpg", // Bad Bunny
+  "https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/05/d7/e1/05d7e189-c4d5-331f-0327-da3add4bae06/16UMGIM14728.rgb.jpg/200x200bb.jpg", // Álvaro Soler
   // French
-  "https://is1-ssl.mzstatic.com/image/thumb/Music112/v4/19/d7/7f/19d77fb9-4e13-3a77-c84d-8399a4213316/13UMGIM59162.rgb.jpg/600x600bb.jpg", // Stromae
-  "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/fd/4a/77/fd4a77db-0ebc-d043-41a2-f32fa1bb0fb4/dj.qrikkdwj.jpg/600x600bb.jpg", // Daft Punk
-  "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/49/58/30/49583018-308b-431d-c691-4a28e78be8cd/14UMGIM01109.rgb.jpg/600x600bb.jpg", // Indila
-  "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/c5/e6/66/c5e66687-e756-a870-a6c2-c2f87fd89f80/886448932147.jpg/600x600bb.jpg", // Videoclub
-  "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/96/a2/a4/96a2a4e8-53b8-05d3-d0e2-fb1e41817f1d/190295127718.jpg/600x600bb.jpg", // Angèle
+  "https://is1-ssl.mzstatic.com/image/thumb/Music112/v4/19/d7/7f/19d77fb9-4e13-3a77-c84d-8399a4213316/13UMGIM59162.rgb.jpg/200x200bb.jpg", // Stromae
+  "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/fd/4a/77/fd4a77db-0ebc-d043-41a2-f32fa1bb0fb4/dj.qrikkdwj.jpg/200x200bb.jpg", // Daft Punk
+  "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/49/58/30/49583018-308b-431d-c691-4a28e78be8cd/14UMGIM01109.rgb.jpg/200x200bb.jpg", // Indila
+  "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/c5/e6/66/c5e66687-e756-a870-a6c2-c2f87fd89f80/886448932147.jpg/200x200bb.jpg", // Videoclub
+  "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/96/a2/a4/96a2a4e8-53b8-05d3-d0e2-fb1e41817f1d/190295127718.jpg/200x200bb.jpg", // Angèle
   // Italian
-  "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/bf/aa/6b/bfaa6b30-3bc9-af12-c776-510e3f21b475/18UMGIM74788.rgb.jpg/600x600bb.jpg", // Andrea Bocelli
-  "https://is1-ssl.mzstatic.com/image/thumb/Music112/v4/02/9e/06/029e0667-367e-f60c-fee3-05588ae95834/196589461865.jpg/600x600bb.jpg", // Måneskin
-  "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/d9/03/e4/d903e480-91e7-28cf-7fa7-f2758c716888/035627131424.jpg/600x600bb.jpg", // Lucio Dalla
-  "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/7a/fb/ab/7afbab27-17b4-ee23-0c71-9bd0e63f2832/1200214893668.jpg/600x600bb.jpg", // Laura Pausini
+  "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/bf/aa/6b/bfaa6b30-3bc9-af12-c776-510e3f21b475/18UMGIM74788.rgb.jpg/200x200bb.jpg", // Andrea Bocelli
+  "https://is1-ssl.mzstatic.com/image/thumb/Music112/v4/02/9e/06/029e0667-367e-f60c-fee3-05588ae95834/196589461865.jpg/200x200bb.jpg", // Måneskin
+  "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/d9/03/e4/d903e480-91e7-28cf-7fa7-f2758c716888/035627131424.jpg/200x200bb.jpg", // Lucio Dalla
+  "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/7a/fb/ab/7afbab27-17b4-ee23-0c71-9bd0e63f2832/1200214893668.jpg/200x200bb.jpg", // Laura Pausini
   // German
-  "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/1d/35/21/1d352129-b0a3-4a02-5cb4-e7836e9c00ea/840054901287.png/600x600bb.jpg", // Nena
-  "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/78/af/45/78af45f6-e4e6-5681-c1f6-a20e3949ab8c/18UMGIM31237.rgb.jpg/600x600bb.jpg", // Rammstein
-  "https://is1-ssl.mzstatic.com/image/thumb/Music1/v4/ac/34/2d/ac342dcf-8349-676f-9510-c1bd27e932d2/dj.ajlyslln.jpg/600x600bb.jpg", // Kraftwerk
-  "https://is1-ssl.mzstatic.com/image/thumb/Music3/v4/12/4a/24/124a242a-940d-1bd7-8324-87aea91560b3/886445096033.jpg/600x600bb.jpg"  // Cro
+  "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/1d/35/21/1d352129-b0a3-4a02-5cb4-e7836e9c00ea/840054901287.png/200x200bb.jpg", // Nena
+  "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/78/af/45/78af45f6-e4e6-5681-c1f6-a20e3949ab8c/18UMGIM31237.rgb.jpg/200x200bb.jpg", // Rammstein
+  "https://is1-ssl.mzstatic.com/image/thumb/Music1/v4/ac/34/2d/ac342dcf-8349-676f-9510-c1bd27e932d2/dj.ajlyslln.jpg/200x200bb.jpg", // Kraftwerk
+  "https://is1-ssl.mzstatic.com/image/thumb/Music3/v4/12/4a/24/124a242a-940d-1bd7-8324-87aea91560b3/886445096033.jpg/200x200bb.jpg"  // Cro
 ];
 
 // Curated songs strictly from the 5 supported languages (Italian, French, Spanish, German, English)
@@ -1544,10 +1545,12 @@ function renderBillboardRow(containerId, items) {
   const el = document.getElementById(containerId);
   if (!el || !items || items.length === 0) return;
 
+  // Base list of items repeated to ensure width >= 2400px (covers ultrawide & 4K screens)
   let baseList = [...items];
-  while (baseList.length < 12) {
+  while (baseList.length < 15) {
     baseList = baseList.concat(items);
   }
+  // Exactly 2 identical halves [Set A, Set A] for mathematically seamless -50% translateX loop
   const duplicated = [...baseList, ...baseList];
 
   el.innerHTML = duplicated.map(src => `
@@ -1566,8 +1569,13 @@ function renderSongPillsRow(containerId, songs) {
   const el = document.getElementById(containerId);
   if (!el || !songs || songs.length === 0) return;
 
-  // Duplicate array once for seamless loop exactly like the reference file
-  const duplicated = [...songs, ...songs];
+  // Base list of songs repeated to ensure width >= 2600px
+  let baseList = [...songs];
+  while (baseList.length < 12) {
+    baseList = baseList.concat(songs);
+  }
+  // Exactly 2 identical halves [Set A, Set A] for mathematically seamless -50% translateX loop
+  const duplicated = [...baseList, ...baseList];
 
   el.innerHTML = duplicated.map(song => {
     const q = `${song.artist} ${song.title}`;
