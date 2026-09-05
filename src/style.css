@@ -657,7 +657,7 @@ html, body {
 }
 
 .hero-content {
-  max-width: 680px;
+  max-width: 920px;
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -701,7 +701,7 @@ html, body {
 }
 
 .hero-title {
-  font-size: clamp(2.1rem, 5vw, 3rem);
+  font-size: clamp(2.5rem, 5.5vw, 4.5rem);
   font-weight: 800;
   letter-spacing: -0.035em;
   color: #ffffff;
@@ -710,10 +710,10 @@ html, body {
 }
 
 .hero-subtitle {
-  font-size: clamp(0.95rem, 2vw, 1.12rem);
+  font-size: clamp(1rem, 2vw, 1.3rem);
   color: var(--text-secondary);
   line-height: 1.6;
-  max-width: 540px;
+  max-width: 680px;
   margin-bottom: 2.25rem;
   font-weight: 400;
 }
@@ -721,7 +721,7 @@ html, body {
 /* Big Hero Search Bar */
 .hero-search-box-wrapper {
   width: 100%;
-  max-width: 620px;
+  max-width: 780px;
   position: relative;
   margin-bottom: 2rem;
   z-index: 200;
@@ -731,11 +731,11 @@ html, body {
   display: flex;
   align-items: center;
   width: 100%;
-  height: 56px;
+  height: 66px;
   background: var(--bg-surface-elevated);
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-lg);
-  padding: 0 0.4rem 0 1.25rem;
+  padding: 0 0.5rem 0 1.5rem;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
   transition: all var(--transition-normal);
 }
@@ -747,10 +747,10 @@ html, body {
 }
 
 .hero-search-icon {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   color: var(--text-tertiary);
-  margin-right: 0.85rem;
+  margin-right: 0.9rem;
   flex-shrink: 0;
   transition: color var(--transition-fast);
 }
@@ -765,7 +765,7 @@ html, body {
   background: transparent;
   border: none;
   outline: none;
-  font-size: 1.05rem;
+  font-size: 1.15rem;
   font-family: inherit;
   color: var(--text-primary);
   width: 100%;
@@ -798,10 +798,10 @@ html, body {
 }
 
 .hero-search-submit {
-  height: 44px;
-  padding: 0 1.4rem;
+  height: 52px;
+  padding: 0 1.75rem;
   border-radius: var(--radius-md);
-  font-size: 0.92rem;
+  font-size: 1rem;
   font-weight: 600;
   flex-shrink: 0;
   display: inline-flex;
