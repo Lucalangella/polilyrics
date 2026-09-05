@@ -251,6 +251,39 @@
 
       <!-- Persistent Bottom Player Bar: ALWAYS AT THE BOTTOM, ALWAYS VISIBLE! -->
       <footer id="bottom-player-bar" class="bottom-player-bar" role="region" aria-label="Playback Controls and Settings">
+        <!-- Inline Scrubber Slider Drawer (Option 2: -30s to +30s Scrubbing) -->
+        <div id="sync-scrubber-drawer" class="sync-scrubber-drawer hidden" role="dialog" aria-label="Sync Scrubber Drawer">
+          <div class="sync-scrubber-header">
+            <div class="sync-scrubber-title">
+              <svg class="icon-xs text-gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="4" y1="21" x2="4" y2="14"></line>
+                <line x1="4" y1="10" x2="4" y2="3"></line>
+                <line x1="12" y1="21" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12" y2="3"></line>
+                <line x1="20" y1="21" x2="20" y2="16"></line>
+                <line x1="20" y1="12" x2="20" y2="3"></line>
+              </svg>
+              <span>Scrub Timing</span>
+            </div>
+            <div class="sync-scrubber-header-right">
+              <span id="sync-scrubber-readout" class="sync-scrubber-readout">0.0s</span>
+              <button type="button" id="btn-scrubber-close" class="sync-scrubber-close-btn" aria-label="Close sync scrubber">&times;</button>
+            </div>
+          </div>
+          <div class="sync-scrubber-track-row">
+            <span class="sync-scrubber-bound">-30s</span>
+            <input type="range" id="sync-scrubber-slider" class="sync-scrubber-slider" min="-30" max="30" step="0.5" value="0" aria-label="Lyric sync scrub slider" />
+            <span class="sync-scrubber-bound">+30s</span>
+          </div>
+          <div class="sync-scrubber-presets">
+            <button type="button" class="btn btn-ghost btn-xs sync-preset-chip" data-step="-5">-5s</button>
+            <button type="button" class="btn btn-ghost btn-xs sync-preset-chip" data-step="-1">-1s</button>
+            <button type="button" id="btn-scrubber-reset" class="btn btn-ghost btn-xs sync-preset-chip sync-preset-reset" title="Reset offset to 0.0s">↺ 0s</button>
+            <button type="button" class="btn btn-ghost btn-xs sync-preset-chip" data-step="1">+1s</button>
+            <button type="button" class="btn btn-ghost btn-xs sync-preset-chip" data-step="5">+5s</button>
+          </div>
+        </div>
+
         <!-- Interactive Seek / Progress Scrubber -->
         <div class="bottom-player-progress-track" id="bottom-progress-track" title="Click to seek track">
           <div class="bottom-player-progress-fill" id="bottom-progress-fill"></div>
@@ -347,105 +380,46 @@
             </div>
           </div>
 
-          <!-- Right: Sync Calibration Controls -->
+          <!-- Right: Sync Calibration Controls (Option 1: Step Resolution + Option 2: Inline Scrub Slider) -->
           <div class="bottom-bar-right">
-            <div class="sync-offset-bar" id="sync-offset-bar" title="Fine-tune lyric synchronization with music">
-              <div class="sync-label-group">
-                <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="12" cy="12" r="10" />
-                  <polyline points="12 6 12 12 16 14" />
-                </svg>
-                <span class="sync-label">Sync:</span>
-              </div>
+            <!-- Primary Sync Bar (Option 1: Step Toggle + Nudge Buttons + Scrubber Toggle) -->
+            <div class="sync-offset-bar" id="sync-offset-bar">
               <div class="sync-buttons-group">
-                <button id="btn-sync-sub-05" class="btn btn-ghost btn-xs sync-btn" title="Hold to repeat. Delay lyrics -0.5s">-0.5s</button>
-                <button id="btn-sync-sub-01" class="btn btn-ghost btn-xs sync-btn" title="Hold to repeat. Nudge lyrics -0.1s">-0.1s</button>
-                <button id="sync-offset-val" class="sync-value" title="Click to open full Calibration Panel (slider, 1-click snap, coarse jumps)" role="button" aria-label="Open sync calibration">0.0s</button>
-                <button id="btn-sync-add-01" class="btn btn-ghost btn-xs sync-btn" title="Hold to repeat. Nudge lyrics +0.1s">+0.1s</button>
-                <button id="btn-sync-add-05" class="btn btn-ghost btn-xs sync-btn" title="Hold to repeat. Advance lyrics +0.5s">+0.5s</button>
-                <button id="btn-sync-reset" class="btn btn-ghost btn-xs sync-reset-btn" title="Reset offset to 0.0s">↺ Reset</button>
-                <button id="btn-open-sync-modal" class="btn btn-ghost btn-xs sync-calibrate-btn" title="Open calibration modal & slider">
+                <button id="btn-sync-sub" class="btn btn-ghost btn-xs sync-btn sync-step-nudge-btn" title="Hold to repeat. Delay lyrics by active step" aria-label="Decrease sync offset">−</button>
+                <button id="sync-offset-val" class="sync-value" title="Current sync offset. Click to toggle Scrub Slider" role="button" aria-label="Toggle sync scrub slider">0.0s</button>
+                <button id="btn-sync-add" class="btn btn-ghost btn-xs sync-btn sync-step-nudge-btn" title="Hold to repeat. Advance lyrics by active step" aria-label="Increase sync offset">+</button>
+                
+                <!-- Step Resolution Multiplier Toggle (Option 1) -->
+                <div class="sync-step-selector" role="group" aria-label="Select sync step resolution">
+                  <button type="button" class="sync-step-pill active" data-step="0.1" title="Set step to 0.1s">0.1s</button>
+                  <button type="button" class="sync-step-pill" data-step="1.0" title="Set step to 1.0s">1s</button>
+                  <button type="button" class="sync-step-pill" data-step="5.0" title="Set step to 5.0s (Fast 20s jumps)">5s</button>
+                </div>
+
+                <!-- Slider Drawer Toggle Button -->
+                <button id="btn-toggle-sync-slider" class="btn btn-ghost btn-xs sync-slider-toggle-btn" title="Toggle -30s to +30s Scrub Slider" aria-label="Toggle scrub slider">
                   <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="3"></circle>
-                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                    <line x1="4" y1="21" x2="4" y2="14"></line>
+                    <line x1="4" y1="10" x2="4" y2="3"></line>
+                    <line x1="12" y1="21" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12" y2="3"></line>
+                    <line x1="20" y1="21" x2="20" y2="16"></line>
+                    <line x1="20" y1="12" x2="20" y2="3"></line>
+                    <line x1="1" y1="14" x2="7" y2="14"></line>
+                    <line x1="9" y1="8" x2="15" y2="8"></line>
+                    <line x1="17" y1="16" x2="23" y2="16"></line>
                   </svg>
+                  <span class="sync-slider-btn-text">Slider</span>
                 </button>
+
+                <!-- Reset Button -->
+                <button id="btn-sync-reset" class="btn btn-ghost btn-xs sync-reset-btn" title="Reset offset to 0.0s" aria-label="Reset sync offset">↺</button>
               </div>
             </div>
           </div>
         </div>
       </footer>
     </main>
-
-    <!-- Sync Calibration Modal / Quick Alignment Dialog -->
-    <div id="sync-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="sync-modal-title">
-      <div class="modal-card sync-modal-card">
-        <div class="modal-header">
-          <div class="modal-title-group">
-            <svg class="icon text-gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10" />
-              <polyline points="12 6 12 12 16 14" />
-            </svg>
-            <div>
-              <h3 id="sync-modal-title">Sync Calibration</h3>
-              <p class="modal-subtitle">Align lyric timing with YouTube video playback</p>
-            </div>
-          </div>
-          <button id="sync-modal-close" class="modal-close" aria-label="Close sync modal">&times;</button>
-        </div>
-
-        <div class="modal-body sync-modal-body">
-          <!-- 1-Click Anchor Button: The instant fix for 20s intro desync! -->
-          <div class="sync-hero-action">
-            <button id="btn-sync-modal-snap" class="btn btn-primary sync-snap-large-btn" title="Snap active lyric line to current playback position">
-              <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10" />
-                <circle cx="12" cy="12" r="3" />
-              </svg>
-              <span>🎯 Snap Active Line to Audio Now</span>
-            </button>
-            <p class="sync-action-hint">When you hear a line sung, click here or the 🎯 icon on any lyric row to align the entire song instantly.</p>
-          </div>
-
-          <!-- Direct Offset Slider -->
-          <div class="sync-slider-section">
-            <div class="sync-slider-header">
-              <span class="sync-slider-label">Scrub Offset (-30s to +30s)</span>
-              <span id="sync-modal-offset-readout" class="sync-modal-readout">0.0s</span>
-            </div>
-            <input type="range" id="sync-modal-slider" min="-30" max="30" step="0.5" value="0" class="sync-range-slider" />
-            <div class="sync-slider-ticks">
-              <span>-30s</span>
-              <span>-15s</span>
-              <span>0s</span>
-              <span>+15s</span>
-              <span>+30s</span>
-            </div>
-          </div>
-
-          <!-- Coarse & Fine Step Presets -->
-          <div class="sync-presets-section">
-            <span class="sync-section-title">Coarse Jumps:</span>
-            <div class="sync-preset-buttons">
-              <button class="btn btn-ghost btn-sm sync-step-btn" data-step="-5">-5.0s</button>
-              <button class="btn btn-ghost btn-sm sync-step-btn" data-step="-1">-1.0s</button>
-              <button class="btn btn-ghost btn-sm sync-step-btn" data-step="reset">↺ 0.0s</button>
-              <button class="btn btn-ghost btn-sm sync-step-btn" data-step="1">+1.0s</button>
-              <button class="btn btn-ghost btn-sm sync-step-btn" data-step="5">+5.0s</button>
-            </div>
-          </div>
-
-          <!-- Manual Direct Input -->
-          <div class="sync-manual-input-row">
-            <label for="sync-modal-input" class="sync-manual-label">Manual Offset (seconds):</label>
-            <div class="sync-input-group">
-              <input type="number" id="sync-modal-input" step="0.1" value="0.0" class="select-input sync-number-input" />
-              <button id="btn-sync-modal-apply" class="btn btn-secondary btn-sm">Apply</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
 
     <!-- Word Details Modal / Tooltip Popover -->
     <div id="word-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true">

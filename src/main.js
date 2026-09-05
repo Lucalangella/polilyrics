@@ -186,24 +186,21 @@ const modalWordMeaning = document.getElementById('modal-word-meaning');
 const modalCloseBtn = document.getElementById('modal-close-btn');
 const modalPronounceBtn = document.getElementById('modal-pronounce-btn');
 
-// Sync Offset Calibration State
+// Sync Offset Calibration State (Option 1 + Option 2)
 let currentSyncOffset = 0.0; // Seconds offset (positive = video intro/delay, negative = video ahead)
+let activeSyncStep = 0.1; // Default step resolution: 0.1s (0.1s | 1.0s | 5.0s)
 const syncOffsetVal = document.getElementById('sync-offset-val');
-const btnSyncSub05 = document.getElementById('btn-sync-sub-05');
-const btnSyncSub01 = document.getElementById('btn-sync-sub-01');
-const btnSyncAdd01 = document.getElementById('btn-sync-add-01');
-const btnSyncAdd05 = document.getElementById('btn-sync-add-05');
+const btnSyncSub = document.getElementById('btn-sync-sub');
+const btnSyncAdd = document.getElementById('btn-sync-add');
 const btnSyncReset = document.getElementById('btn-sync-reset');
-const btnOpenSyncModal = document.getElementById('btn-open-sync-modal');
+const btnToggleSyncSlider = document.getElementById('btn-toggle-sync-slider');
 
-// Sync Calibration Modal Elements
-const syncModal = document.getElementById('sync-modal');
-const syncModalClose = document.getElementById('sync-modal-close');
-const btnSyncModalSnap = document.getElementById('btn-sync-modal-snap');
-const syncModalSlider = document.getElementById('sync-modal-slider');
-const syncModalOffsetReadout = document.getElementById('sync-modal-offset-readout');
-const syncModalInput = document.getElementById('sync-modal-input');
-const btnSyncModalApply = document.getElementById('btn-sync-modal-apply');
+// Inline Scrubber Slider Drawer Elements (Option 2)
+const syncScrubberDrawer = document.getElementById('sync-scrubber-drawer');
+const syncScrubberSlider = document.getElementById('sync-scrubber-slider');
+const syncScrubberReadout = document.getElementById('sync-scrubber-readout');
+const btnScrubberClose = document.getElementById('btn-scrubber-close');
+const btnScrubberReset = document.getElementById('btn-scrubber-reset');
 
 /**
  * View Management: Landing View vs Player View
@@ -322,17 +319,14 @@ function loadSyncOffsetForTrack(trackId) {
   setSyncOffset(0.0, false);
 }
 
-function updateSyncModalUI() {
+function updateSyncDrawerUI() {
   const sign = currentSyncOffset > 0 ? '+' : '';
   const formatted = `${sign}${currentSyncOffset.toFixed(1)}s`;
-  if (syncModalOffsetReadout) {
-    syncModalOffsetReadout.textContent = formatted;
+  if (syncScrubberReadout) {
+    syncScrubberReadout.textContent = formatted;
   }
-  if (syncModalSlider) {
-    syncModalSlider.value = Math.max(-30, Math.min(30, currentSyncOffset));
-  }
-  if (syncModalInput) {
-    syncModalInput.value = currentSyncOffset.toFixed(1);
+  if (syncScrubberSlider) {
+    syncScrubberSlider.value = Math.max(-30, Math.min(30, currentSyncOffset));
   }
 }
 
@@ -346,7 +340,7 @@ function setSyncOffset(val, persist = true) {
     else if (currentSyncOffset < 0) syncOffsetVal.classList.add('negative');
   }
 
-  updateSyncModalUI();
+  updateSyncDrawerUI();
 
   if (persist && currentTrackId) {
     try {
@@ -1822,27 +1816,36 @@ function initEvents() {
   });
 
   // Helper for hold-to-repeat with acceleration (prevents mobile zoom & allows fast scrubbing)
-  function setupHoldToRepeat(button, delta) {
+  function setupHoldToRepeat(button, getDelta) {
     if (!button) return;
     let timer = null;
     let interval = null;
     let count = 0;
 
+    function getBaseDelta() {
+      return typeof getDelta === 'function' ? getDelta() : getDelta;
+    }
+
     function executeStep() {
       count++;
-      let step = delta;
+      const base = getBaseDelta();
+      let step = base;
       if (count > 8) {
-        step = delta * 2;
+        step = base * 2;
       }
       if (count > 20) {
-        step = delta * 5;
+        step = base * 5;
       }
       setSyncOffset(currentSyncOffset + step);
     }
 
+    let hasMousedownHandled = false;
+
     function start(e) {
       if (e.button !== undefined && e.button !== 0) return;
-      setSyncOffset(currentSyncOffset + delta);
+      hasMousedownHandled = true;
+      const base = getBaseDelta();
+      setSyncOffset(currentSyncOffset + base);
       count = 0;
       timer = setTimeout(() => {
         interval = setInterval(executeStep, 90);
@@ -1854,6 +1857,9 @@ function initEvents() {
       clearInterval(interval);
       timer = null;
       interval = null;
+      setTimeout(() => {
+        hasMousedownHandled = false;
+      }, 100);
     }
 
     button.addEventListener('mousedown', start);
@@ -1865,65 +1871,100 @@ function initEvents() {
     }, { passive: false });
     button.addEventListener('touchend', stop);
     button.addEventListener('touchcancel', stop);
-  }
 
-  // Sync Offset Controls Listeners with Hold-to-Repeat Acceleration
-  setupHoldToRepeat(btnSyncSub05, -0.5);
-  setupHoldToRepeat(btnSyncSub01, -0.1);
-  setupHoldToRepeat(btnSyncAdd01, 0.1);
-  setupHoldToRepeat(btnSyncAdd05, 0.5);
-  if (btnSyncReset) btnSyncReset.addEventListener('click', () => setSyncOffset(0.0));
-
-  // Sync Calibration Modal Dialog
-  function openSyncModal() {
-    if (syncModal) {
-      updateSyncModalUI();
-      syncModal.classList.remove('hidden');
-    }
-  }
-
-  function closeSyncModal() {
-    if (syncModal) {
-      syncModal.classList.add('hidden');
-    }
-  }
-
-  if (syncOffsetVal) syncOffsetVal.addEventListener('click', openSyncModal);
-  if (btnOpenSyncModal) btnOpenSyncModal.addEventListener('click', openSyncModal);
-  if (syncModalClose) syncModalClose.addEventListener('click', closeSyncModal);
-  if (syncModal) {
-    syncModal.addEventListener('click', (e) => {
-      if (e.target === syncModal) closeSyncModal();
-    });
-  }
-
-  // 1-Click Snap Button in Modal
-  if (btnSyncModalSnap) {
-    btnSyncModalSnap.addEventListener('click', () => {
-      const targetIndex = currentActiveIndex >= 0 ? currentActiveIndex : 0;
-      if (currentLyrics && currentLyrics[targetIndex]) {
-        calibrateSyncToLine(currentLyrics[targetIndex].start);
-      } else {
-        showToast('No lyrics loaded to anchor to');
+    // Support keyboard activation (Enter/Space) and synthetic click
+    button.addEventListener('click', (e) => {
+      if (!hasMousedownHandled) {
+        const base = getBaseDelta();
+        setSyncOffset(currentSyncOffset + base);
       }
     });
   }
 
-  // Offset Slider in Modal
-  if (syncModalSlider) {
-    syncModalSlider.addEventListener('input', (e) => {
+  // Option 1: Dynamic Step Resolution (0.1s | 1s | 5s) Nudge Buttons
+  setupHoldToRepeat(btnSyncSub, () => -activeSyncStep);
+  setupHoldToRepeat(btnSyncAdd, () => activeSyncStep);
+  if (btnSyncReset) btnSyncReset.addEventListener('click', () => setSyncOffset(0.0));
+
+  // Option 1: Step Resolution Multiplier Pills (0.1s, 1s, 5s)
+  const syncStepPills = document.querySelectorAll('.sync-step-pill');
+  syncStepPills.forEach((pill) => {
+    pill.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const stepVal = parseFloat(pill.dataset.step);
+      if (!isNaN(stepVal)) {
+        activeSyncStep = stepVal;
+        syncStepPills.forEach((p) => p.classList.toggle('active', p === pill));
+        showToast(`Sync step set to ±${stepVal}s`);
+      }
+    });
+  });
+
+  // Option 2: Inline Scrubber Slider Drawer (-30s to +30s)
+  function toggleSyncDrawer(e) {
+    if (e) e.stopPropagation();
+    if (!syncScrubberDrawer) return;
+    const isHidden = syncScrubberDrawer.classList.toggle('hidden');
+    if (btnToggleSyncSlider) {
+      btnToggleSyncSlider.classList.toggle('active', !isHidden);
+    }
+    if (!isHidden) {
+      updateSyncDrawerUI();
+    }
+  }
+
+  function closeSyncDrawer() {
+    if (syncScrubberDrawer && !syncScrubberDrawer.classList.contains('hidden')) {
+      syncScrubberDrawer.classList.add('hidden');
+      if (btnToggleSyncSlider) btnToggleSyncSlider.classList.remove('active');
+    }
+  }
+
+  if (btnToggleSyncSlider) btnToggleSyncSlider.addEventListener('click', toggleSyncDrawer);
+  if (syncOffsetVal) syncOffsetVal.addEventListener('click', toggleSyncDrawer);
+  if (syncScrubberDrawer) syncScrubberDrawer.addEventListener('click', (e) => e.stopPropagation());
+  if (btnScrubberClose) btnScrubberClose.addEventListener('click', (e) => {
+    e.stopPropagation();
+    closeSyncDrawer();
+  });
+  if (btnScrubberReset) btnScrubberReset.addEventListener('click', (e) => {
+    e.stopPropagation();
+    setSyncOffset(0.0);
+  });
+
+  // Close scrubber drawer on clicks outside or Escape key
+  document.addEventListener('click', (e) => {
+    if (syncScrubberDrawer && !syncScrubberDrawer.classList.contains('hidden')) {
+      if (!syncScrubberDrawer.contains(e.target) &&
+          !btnToggleSyncSlider?.contains(e.target) &&
+          !syncOffsetVal?.contains(e.target)) {
+        closeSyncDrawer();
+      }
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeSyncDrawer();
+    }
+  });
+
+  // Scrubber Slider Drag Input
+  if (syncScrubberSlider) {
+    syncScrubberSlider.addEventListener('input', (e) => {
       const val = parseFloat(e.target.value);
-      if (!isNaN(val)) setSyncOffset(val);
+      if (!isNaN(val)) {
+        setSyncOffset(val);
+      }
     });
   }
 
-  // Coarse Preset Jump Buttons in Modal
-  document.querySelectorAll('.sync-step-btn').forEach((btn) => {
-    btn.addEventListener('click', () => {
+  // Scrubber Quick Preset Chips (-5s, -1s, +1s, +5s)
+  document.querySelectorAll('.sync-preset-chip').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
       const step = btn.dataset.step;
-      if (step === 'reset') {
-        setSyncOffset(0.0);
-      } else {
+      if (step) {
         const num = parseFloat(step);
         if (!isNaN(num)) {
           setSyncOffset(currentSyncOffset + num);
@@ -1931,23 +1972,6 @@ function initEvents() {
       }
     });
   });
-
-  // Manual Direct Input in Modal
-  if (btnSyncModalApply && syncModalInput) {
-    btnSyncModalApply.addEventListener('click', () => {
-      const val = parseFloat(syncModalInput.value);
-      if (!isNaN(val)) {
-        setSyncOffset(val);
-        const sign = val >= 0 ? '+' : '';
-        showToast(`⏱️ Manual sync offset applied: ${sign}${val.toFixed(1)}s`);
-      }
-    });
-    syncModalInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        btnSyncModalApply.click();
-      }
-    });
-  }
 
   // Browser Back / Forward History Navigation
   window.addEventListener('popstate', () => {
@@ -2102,7 +2126,7 @@ function initEvents() {
         toggleLyricsFullscreen(false);
       }
       closeWordDetails();
-      closeSyncModal();
+      closeSyncDrawer();
       if (ytResultsModal) ytResultsModal.classList.add('hidden');
       hideAllSuggestions();
     }
