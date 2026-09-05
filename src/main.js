@@ -201,6 +201,8 @@ const syncScrubberSlider = document.getElementById('sync-scrubber-slider');
 const syncScrubberReadout = document.getElementById('sync-scrubber-readout');
 const btnScrubberClose = document.getElementById('btn-scrubber-close');
 const btnScrubberReset = document.getElementById('btn-scrubber-reset');
+const btnScrubberHeaderReset = document.getElementById('btn-scrubber-header-reset');
+const syncSliderBadge = document.getElementById('sync-slider-badge');
 
 /**
  * View Management: Landing View vs Player View
@@ -325,6 +327,9 @@ function updateSyncDrawerUI() {
   if (syncScrubberReadout) {
     syncScrubberReadout.textContent = formatted;
   }
+  if (syncSliderBadge) {
+    syncSliderBadge.textContent = formatted;
+  }
   if (syncScrubberSlider) {
     syncScrubberSlider.value = Math.max(-30, Math.min(30, currentSyncOffset));
   }
@@ -332,12 +337,19 @@ function updateSyncDrawerUI() {
 
 function setSyncOffset(val, persist = true) {
   currentSyncOffset = Math.round(val * 10) / 10;
+  const sign = currentSyncOffset > 0 ? '+' : '';
+  const formatted = `${sign}${currentSyncOffset.toFixed(1)}s`;
   if (syncOffsetVal) {
-    const sign = currentSyncOffset > 0 ? '+' : '';
-    syncOffsetVal.textContent = `${sign}${currentSyncOffset.toFixed(1)}s`;
+    syncOffsetVal.textContent = formatted;
     syncOffsetVal.classList.remove('positive', 'negative');
     if (currentSyncOffset > 0) syncOffsetVal.classList.add('positive');
     else if (currentSyncOffset < 0) syncOffsetVal.classList.add('negative');
+  }
+  if (syncSliderBadge) {
+    syncSliderBadge.textContent = formatted;
+    syncSliderBadge.classList.remove('positive', 'negative');
+    if (currentSyncOffset > 0) syncSliderBadge.classList.add('positive');
+    else if (currentSyncOffset < 0) syncSliderBadge.classList.add('negative');
   }
 
   updateSyncDrawerUI();
@@ -566,10 +578,10 @@ function handleSeekToLine(index, startTime) {
  * Receives current timestamp and activates corresponding lyric row accounting for sync offset.
  */
 function onPlayerTimeUpdate(currentTime) {
-  currentTimeTxt.textContent = formatTime(currentTime);
-  const dur = playerController.getDuration();
+  if (currentTimeTxt) currentTimeTxt.textContent = formatTime(currentTime);
+  const dur = playerController ? playerController.getDuration() : 0;
   if (dur > 0) {
-    durationTimeTxt.textContent = formatTime(dur);
+    if (durationTimeTxt) durationTimeTxt.textContent = formatTime(dur);
     const progressFill = document.getElementById('bottom-progress-fill');
     if (progressFill) {
       const pct = Math.min(100, Math.max(0, (currentTime / dur) * 100));
@@ -1709,21 +1721,25 @@ function initEvents() {
   });
 
   // Repeat Current Line (A-B loop)
-  btnRepeatLine.addEventListener('click', () => {
-    if (currentActiveIndex >= 0 && currentLyrics[currentActiveIndex]) {
-      handleSeekToLine(currentActiveIndex, currentLyrics[currentActiveIndex].start);
-    } else if (currentLyrics[0]) {
-      handleSeekToLine(0, currentLyrics[0].start);
-    }
-  });
+  if (btnRepeatLine) {
+    btnRepeatLine.addEventListener('click', () => {
+      if (currentActiveIndex >= 0 && currentLyrics[currentActiveIndex]) {
+        handleSeekToLine(currentActiveIndex, currentLyrics[currentActiveIndex].start);
+      } else if (currentLyrics[0]) {
+        handleSeekToLine(0, currentLyrics[0].start);
+      }
+    });
+  }
 
   // Playback Speed Toggle
-  btnSpeed.addEventListener('click', () => {
-    currentSpeedIndex = (currentSpeedIndex + 1) % playbackSpeeds.length;
-    const speed = playbackSpeeds[currentSpeedIndex];
-    btnSpeed.textContent = `${speed.toFixed(speed === 1 ? 1 : 2)}x`;
-    playerController.setPlaybackRate(speed);
-  });
+  if (btnSpeed) {
+    btnSpeed.addEventListener('click', () => {
+      currentSpeedIndex = (currentSpeedIndex + 1) % playbackSpeeds.length;
+      const speed = playbackSpeeds[currentSpeedIndex];
+      btnSpeed.textContent = `${speed.toFixed(speed === 1 ? 1 : 2)}x`;
+      playerController.setPlaybackRate(speed);
+    });
+  }
 
   // Auto-scroll Toggle
   btnAutoScroll.addEventListener('click', () => {
@@ -1914,6 +1930,10 @@ function initEvents() {
     e.stopPropagation();
     setSyncOffset(0.0);
   });
+  if (btnScrubberHeaderReset) btnScrubberHeaderReset.addEventListener('click', (e) => {
+    e.stopPropagation();
+    setSyncOffset(0.0);
+  });
 
   // Close scrubber drawer on clicks outside or Escape key
   document.addEventListener('click', (e) => {
@@ -2078,7 +2098,11 @@ function initEvents() {
       btnNextLine.click();
     } else if (e.key === 'r' || e.key === 'R') {
       e.preventDefault();
-      btnRepeatLine.click();
+      if (currentActiveIndex >= 0 && currentLyrics[currentActiveIndex]) {
+        handleSeekToLine(currentActiveIndex, currentLyrics[currentActiveIndex].start);
+      } else if (currentLyrics[0]) {
+        handleSeekToLine(0, currentLyrics[0].start);
+      }
     } else if ((e.key === '[' || e.key === '-') && !e.metaKey && !e.ctrlKey) {
       e.preventDefault();
       const step = e.shiftKey ? 5.0 : 0.5;

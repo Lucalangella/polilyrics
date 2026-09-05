@@ -2415,6 +2415,41 @@ button,
   text-align: center;
 }
 
+.sync-scrubber-reset-btn {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  padding: 0.16rem 0.45rem;
+  border-radius: var(--radius-xs);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  line-height: 1.2;
+  touch-action: manipulation;
+  user-select: none;
+}
+
+.sync-scrubber-reset-btn:hover {
+  color: var(--accent-gold);
+  border-color: var(--accent-gold-border);
+  background: var(--accent-gold-subtle);
+}
+
+.sync-slider-badge {
+  display: none;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.1rem 0.35rem;
+  border-radius: var(--radius-xs);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  color: var(--accent-gold);
+  min-width: 36px;
+  text-align: center;
+}
+
 .sync-scrubber-close-btn {
   background: transparent;
   border: none;
@@ -2901,17 +2936,19 @@ button,
 
   .bottom-player-content {
     display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    gap: 0.35rem;
-    padding: 0.4rem 0.65rem 0.35rem;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.35rem 0.5rem;
+    padding: 0.35rem 0.75rem max(0.45rem, env(safe-area-inset-bottom));
     min-height: auto;
   }
 
-  /* Row 1: Track meta + Time + Main playback controls */
+  /* Row 1: Track meta across top */
   .bottom-bar-left {
     width: 100%;
-    flex: 0 0 auto !important;
+    flex: 0 0 100% !important;
     height: auto !important;
     order: 1;
     display: flex;
@@ -2946,24 +2983,94 @@ button,
     display: none;
   }
 
-  /* Transport controls row */
+  /* Row 2: Transport playback controls on the left */
   .bottom-bar-center {
-    width: 100%;
+    width: auto;
+    flex: 0 0 auto !important;
     order: 2;
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
   }
 
   .bottom-bar-center .playback-controls {
-    width: 100%;
+    width: auto;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 0.25rem;
+    gap: 0.35rem;
   }
 
-  /* Row 2: Sync Calibration & Step Controls (Accessible on mobile) */
+  .volume-control {
+    display: none !important;
+  }
+
+  /* Row 2: Scrub Timing only (Right side) - Decluttered Mobile UX */
+  .bottom-bar-right {
+    display: flex !important;
+    width: auto;
+    flex: 0 0 auto !important;
+    order: 3;
+    margin-left: auto;
+    justify-content: flex-end;
+    border-top: none !important;
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+    position: relative;
+  }
+
+  .bottom-bar-right .sync-offset-bar {
+    width: auto;
+    padding: 0;
+    background: transparent;
+    border: none;
+    gap: 0;
+  }
+
+  .sync-buttons-group {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    width: auto;
+  }
+
+  /* Hide Option 1 nudge/step controls and external reset on mobile - Scrub Timing only! */
+  .sync-step-nudge-btn,
+  .sync-step-selector,
+  .sync-reset-btn,
+  #sync-offset-val {
+    display: none !important;
+  }
+
+  /* Show badge inside Scrub Timing button on mobile */
+  .sync-slider-badge {
+    display: inline-block !important;
+  }
+
+  .sync-slider-btn-text {
+    display: inline !important;
+  }
+
+  .sync-slider-toggle-btn {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem 0.65rem;
+    border-radius: var(--radius-full);
+    background: var(--bg-surface-elevated);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-secondary);
+    font-size: 0.78rem;
+    font-weight: 500;
+  }
+
+  .sync-slider-toggle-btn:hover,
+  .sync-slider-toggle-btn.active {
+    background: var(--accent-gold-subtle);
+    border-color: var(--accent-gold-border);
+    color: var(--accent-gold);
+  }
+
+  /* Scrubber drawer floating above sleek 2-row mobile bar */
   .sync-scrubber-drawer {
     position: absolute;
     bottom: calc(100% + 8px);
@@ -2978,51 +3085,7 @@ button,
   }
 
   .sync-toast {
-    bottom: 140px;
-  }
-
-  .bottom-bar-right {
-    display: flex !important;
-    width: 100%;
-    order: 3;
-    justify-content: center;
-    border-top: 1px solid var(--border-subtle);
-    padding-top: 0.25rem;
-    margin-top: 0.1rem;
-    position: relative;
-  }
-
-  .bottom-bar-right .sync-offset-bar {
-    width: 100%;
-    justify-content: center;
-    padding: 0.15rem 0.25rem;
-    background: transparent;
-    border: none;
-    gap: 0.25rem;
-  }
-
-  .sync-buttons-group {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.25rem;
-    width: 100%;
-  }
-
-  .sync-btn, .sync-reset-btn {
-    padding: 0.2rem 0.4rem;
-    min-height: 26px;
-  }
-
-  .sync-step-pill {
-    padding: 0.12rem 0.32rem;
-    font-size: 0.66rem;
-  }
-
-  .sync-value {
-    font-size: 0.76rem;
-    padding: 0.1rem 0.35rem;
-    min-width: 44px;
+    bottom: 95px;
   }
 
   .volume-slider-wrapper {
@@ -3308,12 +3371,9 @@ button,
     border-radius: var(--radius-full);
   }
 
-  .sync-slider-btn-text {
-    display: none;
-  }
-
   .sync-slider-toggle-btn {
-    padding: 0.2rem 0.35rem;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.74rem;
   }
 }
 
