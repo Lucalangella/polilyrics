@@ -1767,11 +1767,11 @@ function initEvents() {
     } else if (e.key === 'r' || e.key === 'R') {
       e.preventDefault();
       btnRepeatLine.click();
-    } else if (e.key === '[' || e.key === '-') {
+    } else if ((e.key === '[' || e.key === '-') && !e.metaKey && !e.ctrlKey) {
       e.preventDefault();
       setSyncOffset(currentSyncOffset - 0.1);
       showToast(`⏱️ Sync: ${currentSyncOffset >= 0 ? '+' : ''}${currentSyncOffset.toFixed(1)}s`);
-    } else if (e.key === ']' || e.key === '+' || e.key === '=') {
+    } else if ((e.key === ']' || e.key === '+' || e.key === '=') && !e.metaKey && !e.ctrlKey) {
       e.preventDefault();
       setSyncOffset(currentSyncOffset + 0.1);
       showToast(`⏱️ Sync: ${currentSyncOffset >= 0 ? '+' : ''}${currentSyncOffset.toFixed(1)}s`);

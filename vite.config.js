@@ -174,8 +174,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png'],
       manifest: {
-        name: 'Lyricist - Dual-Subtitle Music Player',
-        short_name: 'Lyricist',
+        name: 'Polilyrics - Dual-Subtitle Music Player',
+        short_name: 'Polilyrics',
         description: 'Interactive dual-subtitle player syncing timestamped bilingual lyrics with YouTube',
         theme_color: '#0f172a',
         background_color: '#0b0f19',
