@@ -1476,23 +1476,36 @@ function setupAutocomplete({
  * Renders 3 rotating rows of album art in the background (fetched from iTunes API with supported language keywords)
  * and 2 infinite ticker rows of iconic songs strictly from the 5 supported languages (EN, ES, IT, FR, DE).
  */
-const SEED_KEYWORDS = [
-  'french pop', 'italian indie', 'latin hits', 'spanish rock',
-  'deutschrap', 'deutschpop', 'chanson francaise', 'cantautore',
-  'british rock', 'pop hits', 'classic rock', 'indie alternative',
-  'reggaeton hits', 'french indie', 'musica espanola', 'pop italiano'
-];
 
-const FALLBACK_COVERS = [
-  "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/f5/93/8c/f5938c49-964c-31d1-4b33-78b634f71fb7/190295978075.jpg/600x600bb.jpg", // Coldplay (EN)
-  "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/2c/55/e1/2c55e13f-15d8-1c7c-1826-c5fa55deaa8f/886447217139.jpg/600x600bb.jpg", // Rosalía (ES)
-  "https://is1-ssl.mzstatic.com/image/thumb/Music112/v4/19/d7/7f/19d77fb9-4e13-3a77-c84d-8399a4213316/13UMGIM59162.rgb.jpg/600x600bb.jpg", // Stromae (FR)
-  "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/bf/aa/6b/bfaa6b30-3bc9-af12-c776-510e3f21b475/18UMGIM74788.rgb.jpg/600x600bb.jpg", // Andrea Bocelli (IT)
-  "https://is1-ssl.mzstatic.com/image/thumb/Music128/v4/58/b3/df/58b3df70-d2e0-80e9-3f98-87d63fb9f02e/0859381162407.jpg/600x600bb.jpg", // Nena (DE)
-  "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/fd/4a/77/fd4a77db-0ebc-d043-41a2-f32fa1bb0fb4/dj.qrikkdwj.jpg/600x600bb.jpg", // Daft Punk (FR)
-  "https://is1-ssl.mzstatic.com/image/thumb/Music118/v4/56/3f/23/563f230d-4672-ce4a-7722-1d20425cefe5/886447116159.jpg/600x600bb.jpg", // Måneskin (IT)
-  "https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/05/d7/e1/05d7e189-c4d5-331f-0327-da3add4bae06/16UMGIM14728.rgb.jpg/600x600bb.jpg", // Álvaro Soler (ES)
-  "https://is1-ssl.mzstatic.com/image/thumb/Music122/v4/ad/32/8f/ad328fce-8d4f-2708-9393-15eeb93528a8/06UMGIM68596.rgb.jpg/600x600bb.jpg"  // Rammstein (DE)
+// Curated, verified album artwork from legendary artists strictly across the 5 supported languages (EN, ES, FR, IT, DE)
+const CURATED_BILLBOARD_COVERS = [
+  // English
+  "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/f5/93/8c/f5938c49-964c-31d1-4b33-78b634f71fb7/190295978075.jpg/600x600bb.jpg", // Coldplay
+  "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/0e/c1/57/0ec1575f-5153-ac4b-d578-c5fa3a90bfe1/5021732511676.jpg/600x600bb.jpg", // Dua Lipa
+  "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/4d/08/2a/4d082a9e-7898-1aa1-a02f-339810058d9e/14DMGIM05632.rgb.jpg/600x600bb.jpg", // Queen
+  "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/eb/ca/25/ebca2596-cd1e-b295-91a3-771c868d0a79/191404113868.png/600x600bb.jpg", // Adele
+  "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/fa/5b/89/fa5b898d-bad6-e053-4195-260e5c74f2bb/00602567725466.rgb.jpg/600x600bb.jpg", // The Beatles
+  // Spanish
+  "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/2c/55/e1/2c55e13f-15d8-1c7c-1826-c5fa55deaa8f/886447217139.jpg/600x600bb.jpg", // Rosalía
+  "https://is1-ssl.mzstatic.com/image/thumb/Music118/v4/77/20/38/77203815-7c88-906d-a4d2-578474f244b6/886447379585.jpg/600x600bb.jpg", // C. Tangana
+  "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/77/32/74/7732746d-25e5-baae-b921-bad4a07d87b1/19UMGIM55524.rgb.jpg/600x600bb.jpg", // Bad Bunny
+  "https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/05/d7/e1/05d7e189-c4d5-331f-0327-da3add4bae06/16UMGIM14728.rgb.jpg/600x600bb.jpg", // Álvaro Soler
+  // French
+  "https://is1-ssl.mzstatic.com/image/thumb/Music112/v4/19/d7/7f/19d77fb9-4e13-3a77-c84d-8399a4213316/13UMGIM59162.rgb.jpg/600x600bb.jpg", // Stromae
+  "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/fd/4a/77/fd4a77db-0ebc-d043-41a2-f32fa1bb0fb4/dj.qrikkdwj.jpg/600x600bb.jpg", // Daft Punk
+  "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/49/58/30/49583018-308b-431d-c691-4a28e78be8cd/14UMGIM01109.rgb.jpg/600x600bb.jpg", // Indila
+  "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/c5/e6/66/c5e66687-e756-a870-a6c2-c2f87fd89f80/886448932147.jpg/600x600bb.jpg", // Videoclub
+  "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/96/a2/a4/96a2a4e8-53b8-05d3-d0e2-fb1e41817f1d/190295127718.jpg/600x600bb.jpg", // Angèle
+  // Italian
+  "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/bf/aa/6b/bfaa6b30-3bc9-af12-c776-510e3f21b475/18UMGIM74788.rgb.jpg/600x600bb.jpg", // Andrea Bocelli
+  "https://is1-ssl.mzstatic.com/image/thumb/Music112/v4/02/9e/06/029e0667-367e-f60c-fee3-05588ae95834/196589461865.jpg/600x600bb.jpg", // Måneskin
+  "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/d9/03/e4/d903e480-91e7-28cf-7fa7-f2758c716888/035627131424.jpg/600x600bb.jpg", // Lucio Dalla
+  "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/7a/fb/ab/7afbab27-17b4-ee23-0c71-9bd0e63f2832/1200214893668.jpg/600x600bb.jpg", // Laura Pausini
+  // German
+  "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/1d/35/21/1d352129-b0a3-4a02-5cb4-e7836e9c00ea/840054901287.png/600x600bb.jpg", // Nena
+  "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/78/af/45/78af45f6-e4e6-5681-c1f6-a20e3949ab8c/18UMGIM31237.rgb.jpg/600x600bb.jpg", // Rammstein
+  "https://is1-ssl.mzstatic.com/image/thumb/Music1/v4/ac/34/2d/ac342dcf-8349-676f-9510-c1bd27e932d2/dj.ajlyslln.jpg/600x600bb.jpg", // Kraftwerk
+  "https://is1-ssl.mzstatic.com/image/thumb/Music3/v4/12/4a/24/124a242a-940d-1bd7-8324-87aea91560b3/886445096033.jpg/600x600bb.jpg"  // Cro
 ];
 
 // Curated songs strictly from the 5 supported languages (Italian, French, Spanish, German, English)
@@ -1527,52 +1540,12 @@ function shuffleArray(array) {
   return arr;
 }
 
-function fetchItunesAlbums(term) {
-  return new Promise((resolve) => {
-    const callbackName = 'itunes_cb_' + Math.random().toString(36).substring(2, 9);
-    const script = document.createElement('script');
-    let settled = false;
-
-    const timeout = setTimeout(() => {
-      if (settled) return;
-      settled = true;
-      if (script.parentNode) script.parentNode.removeChild(script);
-      delete window[callbackName];
-      resolve([]);
-    }, 6000);
-
-    window[callbackName] = function(data) {
-      if (settled) return;
-      settled = true;
-      clearTimeout(timeout);
-      delete window[callbackName];
-      if (script.parentNode) script.parentNode.removeChild(script);
-      const urls = (data?.results || [])
-        .filter(item => item && item.artworkUrl100)
-        .map(item => item.artworkUrl100.replace('100x100bb.jpg', '600x600bb.jpg'));
-      resolve(urls);
-    };
-
-    script.onerror = function() {
-      if (settled) return;
-      settled = true;
-      clearTimeout(timeout);
-      delete window[callbackName];
-      if (script.parentNode) script.parentNode.removeChild(script);
-      resolve([]);
-    };
-
-    script.src = `https://itunes.apple.com/search?term=${encodeURIComponent(term)}&entity=album&limit=25&callback=${callbackName}`;
-    document.body.appendChild(script);
-  });
-}
-
 function renderBillboardRow(containerId, items) {
   const el = document.getElementById(containerId);
   if (!el || !items || items.length === 0) return;
 
   let baseList = [...items];
-  while (baseList.length < 14) {
+  while (baseList.length < 12) {
     baseList = baseList.concat(items);
   }
   const duplicated = [...baseList, ...baseList];
@@ -1581,12 +1554,9 @@ function renderBillboardRow(containerId, items) {
     <div class="cover-card">
       <img 
         src="${escapeHtml(src)}" 
-        decoding="async"
-        loading="lazy"
         alt="Album Artwork" 
-        class="opacity-0"
-        onload="this.classList.remove('opacity-0')"
-        onerror="this.parentElement.style.display='none'"
+        loading="eager"
+        decoding="async"
       />
     </div>
   `).join('');
@@ -1612,7 +1582,7 @@ function renderSongPillsRow(containerId, songs) {
   }).join('');
 }
 
-async function initHeroBillboard() {
+function initHeroBillboard() {
   const songRow1 = document.getElementById('song-row-1');
   const songRow2 = document.getElementById('song-row-2');
   if (!songRow1 || !songRow2) return;
@@ -1621,12 +1591,12 @@ async function initHeroBillboard() {
   renderSongPillsRow('song-row-1', SONGS_BATCH_1);
   renderSongPillsRow('song-row-2', SONGS_BATCH_2);
 
-  // 2. Render initial covers instantly so there's zero blank layout
-  const fallbackShuffled = shuffleArray([...FALLBACK_COVERS, ...FALLBACK_COVERS, ...FALLBACK_COVERS, ...FALLBACK_COVERS]);
-  const chunk = Math.ceil(fallbackShuffled.length / 3);
-  renderBillboardRow('row-1', fallbackShuffled.slice(0, chunk));
-  renderBillboardRow('row-2', fallbackShuffled.slice(chunk, chunk * 2));
-  renderBillboardRow('row-3', fallbackShuffled.slice(chunk * 2));
+  // 2. Render curated verified album covers across the 3 marquee rows
+  const shuffled = shuffleArray(CURATED_BILLBOARD_COVERS);
+  const chunkSize = Math.ceil(shuffled.length / 3);
+  renderBillboardRow('row-1', shuffled.slice(0, chunkSize));
+  renderBillboardRow('row-2', shuffled.slice(chunkSize, chunkSize * 2));
+  renderBillboardRow('row-3', shuffled.slice(chunkSize * 2));
 
   // 3. Click delegation on hero songs footer to trigger Polilyrics search
   const heroSongsFooter = document.getElementById('hero-songs-footer');
@@ -1647,22 +1617,6 @@ async function initHeroBillboard() {
         showYouTubeSearchResultsModal(q);
       }
     });
-  }
-
-  // 4. Fetch dynamic iTunes album covers for the 5 supported languages
-  try {
-    const randomKeywords = shuffleArray(SEED_KEYWORDS).slice(0, 4);
-    const batches = await Promise.all(randomKeywords.map(term => fetchItunesAlbums(term)));
-    let allArtworks = shuffleArray(batches.flat());
-
-    if (allArtworks.length >= 18) {
-      const dynamicChunk = Math.ceil(allArtworks.length / 3);
-      renderBillboardRow('row-1', allArtworks.slice(0, dynamicChunk));
-      renderBillboardRow('row-2', allArtworks.slice(dynamicChunk, dynamicChunk * 2));
-      renderBillboardRow('row-3', allArtworks.slice(dynamicChunk * 2));
-    }
-  } catch (err) {
-    console.warn('Could not fetch dynamic iTunes covers, using fallback covers:', err);
   }
 }
 
