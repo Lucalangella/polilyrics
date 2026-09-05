@@ -834,6 +834,28 @@ button,
   }
 }
 
+@keyframes scroll-up {
+  0% {
+    transform: translateY(0);
+    -webkit-transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-50%);
+    -webkit-transform: translateY(-50%);
+  }
+}
+
+@keyframes scroll-down {
+  0% {
+    transform: translateY(-50%);
+    -webkit-transform: translateY(-50%);
+  }
+  100% {
+    transform: translateY(0);
+    -webkit-transform: translateY(0);
+  }
+}
+
 /* Background album cover speeds */
 .animate-marquee-left {
   animation: scroll-left 55s linear infinite;
@@ -3496,20 +3518,57 @@ button,
     font-size: 0.76rem;
   }
 
-  /* Landing Hero Mobile Optimization */
+  /* Landing Hero Mobile Optimization - Vertical Columns for Portrait Orientation */
   .hero-search-landing {
     padding: 1rem 0.5rem 1rem;
     justify-content: space-between;
   }
 
-  .cover-card {
-    width: 6rem;
-    height: 6rem;
-    border-radius: 0.75rem;
+  .billboard-background-wrapper {
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 1.25rem;
+    inset: -30% -25%;
+    transform: rotate(-6deg) scale(1.15);
+    -webkit-transform: rotate(-6deg) scale(1.15);
+    opacity: 0.45;
   }
 
-  .billboard-background-wrapper {
-    gap: 1rem;
+  .billboard-row-container {
+    flex-direction: column;
+    height: 100%;
+    width: auto;
+    overflow: hidden;
+  }
+
+  .billboard-row {
+    flex-direction: column;
+    gap: 1.25rem;
+    width: auto;
+    height: max-content;
+    flex-shrink: 0;
+  }
+
+  .billboard-row.animate-marquee-left {
+    animation: scroll-up 50s linear infinite;
+    -webkit-animation: scroll-up 50s linear infinite;
+  }
+
+  .billboard-row.animate-marquee-right {
+    animation: scroll-down 58s linear infinite;
+    -webkit-animation: scroll-down 58s linear infinite;
+  }
+
+  .billboard-row.animate-marquee-left-fast {
+    animation: scroll-up 44s linear infinite;
+    -webkit-animation: scroll-up 44s linear infinite;
+  }
+
+  .cover-card {
+    width: 6.75rem;
+    height: 6.75rem;
+    border-radius: 0.85rem;
   }
 
   .hero-content {
@@ -3523,15 +3582,17 @@ button,
   }
 
   .hero-title {
-    font-size: clamp(1.75rem, 7vw, 2.25rem);
-    line-height: 1.15;
+    font-size: clamp(1.55rem, 6.2vw, 2.1rem);
+    line-height: 1.18;
     margin-bottom: 0.5rem;
+    padding: 0 0.25rem;
   }
 
   .hero-subtitle {
-    font-size: 0.88rem;
+    font-size: 0.86rem;
     line-height: 1.45;
     margin-bottom: 1.25rem;
+    padding: 0 0.5rem;
   }
 
   .hero-search-box-wrapper {
