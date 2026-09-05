@@ -1139,9 +1139,13 @@ export function getSynchronizedLyrics(trackId, targetLang = 'en') {
   const track = TRACKS.find((t) => t.id === trackId) || TRACKS[0];
 
   return track.lyrics.map((item) => {
-    let translated = item.translations[targetLang];
-    if (!translated || (targetLang === track.sourceLanguage && item.translations.en)) {
-      translated = item.translations.en || item.original;
+    let translated = item.translations ? item.translations[targetLang] : null;
+    if (!translated) {
+      if (track.sourceLanguage && targetLang === track.sourceLanguage) {
+        translated = item.original;
+      } else {
+        translated = (item.translations && item.translations.en) || item.original;
+      }
     }
 
     return {
@@ -1152,6 +1156,24 @@ export function getSynchronizedLyrics(trackId, targetLang = 'en') {
       glossary: item.glossary || {}
     };
   });
+}
+
+/**
+ * Attaches or updates translations for a specific track and persists if dynamic
+ */
+export function updateTrackTranslations(trackId, targetLang, translatedLines) {
+  const track = TRACKS.find((t) => t.id === trackId);
+  if (!track || !Array.isArray(track.lyrics)) return;
+
+  track.lyrics.forEach((item, idx) => {
+    if (!item.translations) item.translations = {};
+    const trans = translatedLines[idx]?.translated || translatedLines[idx];
+    if (trans) {
+      item.translations[targetLang] = trans;
+    }
+  });
+
+  registerDynamicTrack(track, true);
 }
 
 /**

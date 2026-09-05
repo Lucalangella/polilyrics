@@ -11,7 +11,8 @@ import {
   getAllTracks,
   registerDynamicTrack,
   getSynchronizedLyrics,
-  getTrackMeta
+  getTrackMeta,
+  updateTrackTranslations
 } from './lyrics-data.js';
 import {
   searchLrclib,
@@ -514,19 +515,96 @@ function updateLyricsLoadingProgress(message) {
   }
 }
 
+let currentTranslationRequestId = 0;
+
 /**
  * Load and Render Synchronized Lyrics
- * Returns and stores an array of { start, end, original, translated }
+ * Dynamically switches translation language without interrupting ongoing playback.
+ * If translations for the chosen language are already cached, rows update immediately in place.
+ * If not yet translated, fetches neural translations in background and updates visible text in place.
  */
-function reloadLyrics() {
+async function reloadLyrics() {
   if (!currentTrackId) return;
   const targetLang = languageRouter.getCurrentLanguage();
-  // Array strictly conforming to { start, end, original, translated }
-  currentLyrics = getSynchronizedLyrics(currentTrackId, targetLang);
-  currentActiveIndex = -1;
+  const track = getAllTracks().find((t) => t.id === currentTrackId);
+  if (!track || !Array.isArray(track.lyrics) || track.lyrics.length === 0) return;
 
-  renderLyrics(currentLyrics);
-  updateCounter();
+  const targetLangObj = SUPPORTED_LANGUAGES.find((l) => l.code === targetLang);
+  const targetLangName = targetLangObj ? targetLangObj.name : targetLang.toUpperCase();
+
+  // 1. Check if all lines already have the target translation
+  const isTargetSameAsSource = track.sourceLanguage && track.sourceLanguage === targetLang;
+  const hasCachedTranslation = track.lyrics.every(
+    (l) => (l.translations && l.translations[targetLang]) || isTargetSameAsSource
+  );
+
+  if (hasCachedTranslation) {
+    currentLyrics = getSynchronizedLyrics(currentTrackId, targetLang);
+
+    // If DOM already contains rows matching length, update translated text in place
+    // This guarantees video playback is uninterrupted, active line stays active, and no scroll jumps!
+    const rows = lyricsList ? lyricsList.querySelectorAll('.lyric-row') : [];
+    if (rows.length === currentLyrics.length) {
+      currentLyrics.forEach((line, idx) => {
+        const transEl = rows[idx]?.querySelector('.lyric-translated');
+        if (transEl) transEl.textContent = line.translated;
+      });
+      if (currentActiveIndex >= 0 && currentLyrics[currentActiveIndex] && pillTranslated) {
+        pillTranslated.textContent = currentLyrics[currentActiveIndex].translated;
+      }
+      return;
+    }
+
+    // Otherwise initial render
+    currentActiveIndex = -1;
+    renderLyrics(currentLyrics);
+    updateCounter();
+    return;
+  }
+
+  // 2. Not yet translated into targetLang!
+  // Fallback to currently available text while translating in background so user can still see lines
+  currentLyrics = getSynchronizedLyrics(currentTrackId, targetLang);
+  const existingRows = lyricsList ? lyricsList.querySelectorAll('.lyric-row') : [];
+  if (existingRows.length !== currentLyrics.length) {
+    currentActiveIndex = -1;
+    renderLyrics(currentLyrics);
+    updateCounter();
+  }
+
+  const reqId = ++currentTranslationRequestId;
+  showToast(`Translating lyrics to ${targetLangName}...`);
+
+  const rawLines = track.lyrics.map((l) => ({
+    start: l.start,
+    end: l.end,
+    original: l.original
+  }));
+
+  try {
+    const translated = await translationService.translateLines(rawLines, targetLang);
+    if (reqId !== currentTranslationRequestId || currentTrackId !== track.id) return;
+
+    updateTrackTranslations(track.id, targetLang, translated);
+
+    // Refresh currentLyrics array with new translation
+    currentLyrics = getSynchronizedLyrics(currentTrackId, targetLang);
+
+    // Update in-place in the DOM
+    const currentRows = lyricsList ? lyricsList.querySelectorAll('.lyric-row') : [];
+    currentLyrics.forEach((line, idx) => {
+      const transEl = currentRows[idx]?.querySelector('.lyric-translated');
+      if (transEl) transEl.textContent = line.translated;
+    });
+
+    if (currentActiveIndex >= 0 && currentLyrics[currentActiveIndex] && pillTranslated) {
+      pillTranslated.textContent = currentLyrics[currentActiveIndex].translated;
+    }
+
+    showToast(`Lyrics translated to ${targetLangName}!`);
+  } catch (err) {
+    console.error('Failed to translate lyrics on language switch:', err);
+  }
 }
 
 /**
