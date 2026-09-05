@@ -1484,12 +1484,15 @@ const SEED_KEYWORDS = [
 ];
 
 const FALLBACK_COVERS = [
-  "https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/44/14/6e/44146e4e-0ddc-7a91-9e2c-354ecffc9779/20UMGIM92569.rgb.jpg/600x600bb.jpg",
-  "https://is1-ssl.mzstatic.com/image/thumb/Music112/v4/38/d6/70/38d67069-42b3-a15e-bc8e-c579ea666497/196626945068.jpg/600x600bb.jpg",
-  "https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/5a/88/19/5a881954-4638-3162-8178-9f170cf84414/196589025986.jpg/600x600bb.jpg",
-  "https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/1b/49/79/1b497914-7fa7-e6f7-b764-a82f06857143/21UMGIM93481.rgb.jpg/600x600bb.jpg",
-  "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/00/f8/4f/00f84f1a-b333-e18e-49b8-bc849ffb7376/20UMGIM10183.rgb.jpg/600x600bb.jpg",
-  "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/37/10/ad/3710ad1c-7cb0-0a56-91e8-639a04a62174/886444002620.jpg/600x600bb.jpg"
+  "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/f5/93/8c/f5938c49-964c-31d1-4b33-78b634f71fb7/190295978075.jpg/600x600bb.jpg", // Coldplay (EN)
+  "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/2c/55/e1/2c55e13f-15d8-1c7c-1826-c5fa55deaa8f/886447217139.jpg/600x600bb.jpg", // Rosalía (ES)
+  "https://is1-ssl.mzstatic.com/image/thumb/Music112/v4/19/d7/7f/19d77fb9-4e13-3a77-c84d-8399a4213316/13UMGIM59162.rgb.jpg/600x600bb.jpg", // Stromae (FR)
+  "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/bf/aa/6b/bfaa6b30-3bc9-af12-c776-510e3f21b475/18UMGIM74788.rgb.jpg/600x600bb.jpg", // Andrea Bocelli (IT)
+  "https://is1-ssl.mzstatic.com/image/thumb/Music128/v4/58/b3/df/58b3df70-d2e0-80e9-3f98-87d63fb9f02e/0859381162407.jpg/600x600bb.jpg", // Nena (DE)
+  "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/fd/4a/77/fd4a77db-0ebc-d043-41a2-f32fa1bb0fb4/dj.qrikkdwj.jpg/600x600bb.jpg", // Daft Punk (FR)
+  "https://is1-ssl.mzstatic.com/image/thumb/Music118/v4/56/3f/23/563f230d-4672-ce4a-7722-1d20425cefe5/886447116159.jpg/600x600bb.jpg", // Måneskin (IT)
+  "https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/05/d7/e1/05d7e189-c4d5-331f-0327-da3add4bae06/16UMGIM14728.rgb.jpg/600x600bb.jpg", // Álvaro Soler (ES)
+  "https://is1-ssl.mzstatic.com/image/thumb/Music122/v4/ad/32/8f/ad328fce-8d4f-2708-9393-15eeb93528a8/06UMGIM68596.rgb.jpg/600x600bb.jpg"  // Rammstein (DE)
 ];
 
 // Curated songs strictly from the 5 supported languages (Italian, French, Spanish, German, English)
