@@ -1484,10 +1484,7 @@ const SONGS_BATCH_1 = [
   { flag: '🇮🇹', artist: 'Eros Ramazzotti', title: 'Più bella cosa' },
   { flag: '🇫🇷', artist: 'Videoclub', title: 'Amour plastique' },
   { flag: '🇫🇷', artist: 'Aya Nakamura', title: 'Djadja' },
-  { flag: '🇩🇪', artist: 'Kraftwerk', title: 'Das Model' },
-  { flag: '🇬🇧', artist: 'Harry Styles', title: 'As It Was' },
-  { flag: '🇪🇸', artist: 'Manu Chao', title: 'Me Gustas Tú' },
-  { flag: '🇩🇪', artist: 'Peter Fox', title: 'Haus am See' }
+  { flag: '🇩🇪', artist: 'Kraftwerk', title: 'Das Model' }
 ];
 
 const SONGS_BATCH_2 = [
@@ -1498,10 +1495,7 @@ const SONGS_BATCH_2 = [
   { flag: '🇫🇷', artist: 'Indila', title: 'Dernière Danse' },
   { flag: '🇩🇪', artist: 'Nena', title: '99 Luftballons' },
   { flag: '🇮🇹', artist: 'Måneskin', title: 'Zitti e buoni' },
-  { flag: '🇬🇧', artist: 'Coldplay', title: 'Yellow' },
-  { flag: '🇺🇸', artist: 'Billie Eilish', title: 'Birds of a Feather' },
-  { flag: '🇪🇸', artist: 'Bad Bunny', title: 'Tití Me Preguntó' },
-  { flag: '🇩🇪', artist: 'CRO', title: 'Traum' }
+  { flag: '🇬🇧', artist: 'Coldplay', title: 'Yellow' }
 ];
 
 function shuffleArray(array) {
@@ -1582,11 +1576,8 @@ function renderSongPillsRow(containerId, songs) {
   const el = document.getElementById(containerId);
   if (!el || !songs || songs.length === 0) return;
 
-  let baseSongs = [...songs];
-  while (baseSongs.length < 12) {
-    baseSongs = baseSongs.concat(songs);
-  }
-  const duplicated = [...baseSongs, ...baseSongs];
+  // Duplicate array once for seamless loop exactly like the reference file
+  const duplicated = [...songs, ...songs];
 
   el.innerHTML = duplicated.map(song => {
     const q = `${song.artist} ${song.title}`;
