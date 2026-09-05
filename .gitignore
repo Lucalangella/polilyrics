@@ -4,5 +4,3 @@ dist/
 *.local
 .env
 .env.*
-.cursor/
-.codex/

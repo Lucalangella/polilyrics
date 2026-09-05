@@ -125,90 +125,53 @@
       </div>
     </header>
 
-    <!-- Hero Search Landing State (Billboard Experiment Layout) -->
+    <!-- Hero Search Landing State (Default initial view instead of preloaded video) -->
     <section id="hero-search-landing" class="hero-search-landing" aria-label="Search and Explore Music">
-      <!-- Background Billboard Wrapper -->
-      <div class="hero-billboard-wrapper" aria-hidden="true">
-        <!-- Row 1: Left -->
-        <div class="billboard-row-container">
-          <div id="row-1" class="billboard-track animate-marquee-left marquee-wrapper"></div>
-        </div>
-
-        <!-- Row 2: Right -->
-        <div class="billboard-row-container">
-          <div id="row-2" class="billboard-track animate-marquee-right marquee-wrapper"></div>
-        </div>
-
-        <!-- Row 3: Left -->
-        <div class="billboard-row-container">
-          <div id="row-3" class="billboard-track animate-marquee-left-fast marquee-wrapper"></div>
-        </div>
-      </div>
-
-      <!-- Frosted Vignette Overlay -->
-      <div class="hero-vignette-overlay" aria-hidden="true"></div>
-
-      <!-- Empty Spacer for Vertical Centering -->
-      <div class="hero-vertical-spacer" aria-hidden="true"></div>
-
-      <!-- Hero Content Layer -->
       <div class="hero-content">
-        <!-- Badge -->
         <div class="hero-badge">
           <span class="hero-badge-dot"></span>
-          <span>Dual-Subtitle Music Player</span>
+          <span>DUAL-SUBTITLE MUSIC PLAYER</span>
         </div>
-
-        <!-- Main Heading -->
-        <h1 class="hero-title">
-          Learn languages through <span class="hero-title-gradient">music.</span>
-        </h1>
-
+        <h1 class="hero-title">Learn languages through music.</h1>
         <p class="hero-subtitle">
           Search any song, artist, or YouTube video to practice listening with real-time synchronized bilingual lyrics.
         </p>
 
-        <!-- Search Bar Component -->
+        <!-- Big Prominent Search Input -->
         <div class="hero-search-box-wrapper" id="hero-search-wrapper">
           <form id="hero-search-form" class="hero-search-form" role="search" onsubmit="return false;">
-            <svg class="hero-search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            <svg class="hero-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
             </svg>
             <input
               type="text"
               id="hero-search-input"
               class="hero-search-input"
-              placeholder="Videoclub - Amour plastique"
+              placeholder="Search any song, artist, or YouTube URL..."
               autocomplete="off"
               spellcheck="false"
               autofocus
             />
-            <button type="button" id="hero-search-clear" class="hero-search-clear hidden" aria-label="Clear search" title="Clear">×</button>
-            <button type="submit" class="hero-search-submit" title="Search" aria-label="Search">
-              <span class="hero-search-submit-label">Search</span>
-              <span class="hero-search-submit-arrow">→</span>
+            <button type="button" id="hero-search-clear" class="hero-search-clear hidden" aria-label="Clear search">×</button>
+            <button type="submit" class="hero-search-submit btn btn-primary">
+              <span>Search</span>
+              <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+              </svg>
             </button>
           </form>
 
           <!-- Floating Autocomplete Dropdown for Hero Search -->
-          <div id="hero-suggestions-dropdown" class="yt-suggestions-dropdown hero-suggestions-dropdown hidden" role="listbox" aria-label="Search suggestions">
+          <div id="hero-suggestions-dropdown" class="yt-suggestions-dropdown hero-suggestions-dropdown hidden" role="listbox">
             <!-- Populated dynamically as user types -->
           </div>
         </div>
       </div>
 
-      <!-- Moving Rows of Songs (Pills Carousel) -->
-      <footer class="hero-song-footer" aria-label="Explore popular songs">
-        <!-- Pills Row 1: Leftward -->
-        <div class="song-pills-row">
-          <div id="song-row-1" class="song-pills-track animate-pills-left marquee-wrapper"></div>
-        </div>
-
-        <!-- Pills Row 2: Rightward -->
-        <div class="song-pills-row">
-          <div id="song-row-2" class="song-pills-track animate-pills-right marquee-wrapper"></div>
-        </div>
-      </footer>
+      <!-- Live Trending Marquee (populated from Last.fm) -->
+      <div id="marquee-section" class="marquee-section" aria-label="Trending tracks marquee"></div>
     </section>
 
     <!-- Main Responsive Grid / Stack Container (Displayed when a song is chosen) -->

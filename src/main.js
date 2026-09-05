@@ -1455,214 +1455,134 @@ function setupAutocomplete({
 }
 
 /**
- * Hero Billboard & Animated Song Carousel
+ * Loads live trending tracks from Last.fm (or curated fallback) and creates
+ * multiple alternating infinite marquee rows that fill down to the bottom of the screen.
  */
-const SEED_KEYWORDS = [
-  'french pop', 'italian indie', 'latin hits', 'spanish rock',
-  'deutschrap', 'japanese city pop', 'kpop', 'bossa nova',
-  'hip hop 90s', 'classic rock', 'synthwave', 'afrobeats',
-  'reggaeton hits', 'chanson francaise', 'cantautore', 'indie alternative'
-];
+async function initTrendingMarquee() {
+  const marqueeSection = document.getElementById('marquee-section');
+  if (!marqueeSection) return;
 
-const FALLBACK_COVERS = [
-  "https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/44/14/6e/44146e4e-0ddc-7a91-9e2c-354ecffc9779/20UMGIM92569.rgb.jpg/600x600bb.jpg",
-  "https://is1-ssl.mzstatic.com/image/thumb/Music112/v4/38/d6/70/38d67069-42b3-a15e-bc8e-c579ea666497/196626945068.jpg/600x600bb.jpg",
-  "https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/5a/88/19/5a881954-4638-3162-8178-9f170cf84414/196589025986.jpg/600x600bb.jpg",
-  "https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/1b/49/79/1b497914-7fa7-e6f7-b764-a82f06857143/21UMGIM93481.rgb.jpg/600x600bb.jpg",
-  "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/00/f8/4f/00f84f1a-b333-e18e-49b8-bc849ffb7376/20UMGIM10183.rgb.jpg/600x600bb.jpg",
-  "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/37/10/ad/3710ad1c-7cb0-0a56-91e8-639a04a62174/886444002620.jpg/600x600bb.jpg"
-];
+  let currentTracks = FAMOUS_SONGS;
 
-const SONGS_BATCH_1 = [
-  { flag: '🇮🇹', artist: 'Andrea Bocelli', title: 'Con te partirò', query: 'Andrea Bocelli Con te partiro' },
-  { flag: '🇮🇹', artist: 'Domenico Modugno', title: 'Nel blu dipinto di blu', query: 'Domenico Modugno Nel blu dipinto di blu' },
-  { flag: '🇮🇹', artist: 'Lucio Dalla', title: 'Caruso', query: 'Lucio Dalla Caruso' },
-  { flag: '🇮🇹', artist: 'Mahmood', title: 'Tuta Gold', query: 'Mahmood Tuta Gold' },
-  { flag: '🇮🇹', artist: 'Eros Ramazzotti', title: 'Più bella cosa', query: 'Eros Ramazzotti Piu bella cosa' },
-  { flag: '🇫🇷', artist: 'Videoclub', title: 'Amour plastique', query: 'Videoclub Amour plastique' },
-  { flag: '🇫🇷', artist: 'Aya Nakamura', title: 'Djadja', query: 'Aya Nakamura Djadja' },
-  { flag: '🇩🇪', artist: 'Kraftwerk', title: 'Das Model', query: 'Kraftwerk Das Model' }
-];
-
-const SONGS_BATCH_2 = [
-  { flag: '🇪🇸', artist: 'Rosalía', title: 'DESPECHÁ', query: 'Rosalia Despecha' },
-  { flag: '🇫🇷', artist: 'Stromae', title: 'Papaoutai', query: 'Stromae Papaoutai' },
-  { flag: '🇮🇹', artist: 'Ricchi e Poveri', title: 'Sarà perché ti amo', query: 'Ricchi e Poveri Sara perche ti amo' },
-  { flag: '🇪🇸', artist: 'C. Tangana', title: 'Tú Me Dejaste De Querer', query: 'C. Tangana Tu Me Dejaste De Querer' },
-  { flag: '🇫🇷', artist: 'Indila', title: 'Dernière Danse', query: 'Indila Derniere Danse' },
-  { flag: '🇩🇪', artist: 'Nena', title: '99 Luftballons', query: 'Nena 99 Luftballons' },
-  { flag: '🇮🇹', artist: 'Måneskin', title: 'Zitti e buoni', query: 'Maneskin Zitti e buoni' },
-  { flag: '🇯🇵', artist: 'Miki Matsubara', title: 'Stay With Me', query: 'Miki Matsubara Stay With Me' }
-];
-
-function shuffleArray(array) {
-  const arr = [...array];
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr;
-}
-
-function fetchItunesAlbums(term) {
-  return new Promise((resolve) => {
-    // Try native fetch first
-    fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(term)}&entity=album&limit=25`)
-      .then(r => r.ok ? r.json() : null)
-      .then(data => {
-        if (data && data.results && data.results.length > 0) {
-          const urls = data.results
-            .filter(item => item.artworkUrl100)
-            .map(item => item.artworkUrl100.replace('100x100bb.jpg', '500x500bb.jpg'));
-          if (urls.length > 0) {
-            resolve(urls);
-            return;
-          }
-        }
-        fallbackJsonp();
-      })
-      .catch(() => {
-        fallbackJsonp();
-      });
-
-    function fallbackJsonp() {
-      const callbackName = 'itunes_cb_' + Math.random().toString(36).substring(2, 9);
-      const script = document.createElement('script');
-      let done = false;
-
-      window[callbackName] = function(data) {
-        if (done) return;
-        done = true;
-        delete window[callbackName];
-        if (script.parentNode) script.parentNode.removeChild(script);
-        const urls = (data.results || [])
-          .filter(item => item.artworkUrl100)
-          .map(item => item.artworkUrl100.replace('100x100bb.jpg', '500x500bb.jpg'));
-        resolve(urls);
-      };
-
-      script.onerror = function() {
-        if (done) return;
-        done = true;
-        delete window[callbackName];
-        if (script.parentNode) script.parentNode.removeChild(script);
-        resolve([]);
-      };
-
-      setTimeout(() => {
-        if (!done) {
-          done = true;
-          delete window[callbackName];
-          if (script.parentNode) script.parentNode.removeChild(script);
-          resolve([]);
-        }
-      }, 5000);
-
-      script.src = `https://itunes.apple.com/search?term=${encodeURIComponent(term)}&entity=album&limit=25&callback=${callbackName}`;
-      document.body.appendChild(script);
-    }
-  });
-}
-
-function renderBillboardRow(containerId, items) {
-  const el = document.getElementById(containerId);
-  if (!el || !items || !items.length) return;
-
-  const duplicated = [...items, ...items];
-
-  el.innerHTML = duplicated.map(src => `
-    <div class="cover-card">
-      <img 
-        src="${escapeHtml(src)}" 
-        decoding="async"
-        loading="lazy"
-        alt="Album Artwork" 
-        class="opacity-0"
-        onload="this.classList.remove('opacity-0')"
-        onerror="this.parentElement.style.display='none'"
-      />
-    </div>
-  `).join('');
-}
-
-function renderSongRow(containerId, songs) {
-  const el = document.getElementById(containerId);
-  if (!el || !songs || !songs.length) return;
-
-  const duplicated = [...songs, ...songs];
-
-  el.innerHTML = duplicated.map(song => {
-    const q = song.query || `${song.artist} ${song.title}`;
-    return `
-      <div class="song-pill" data-query="${escapeHtml(q)}" role="button" tabindex="0" title="Learn with ${escapeHtml(song.artist)} - ${escapeHtml(song.title)}">
-        <span class="song-pill-flag">${song.flag}</span>
-        <span class="song-pill-artist">${escapeHtml(song.artist)}</span>
-        <span class="song-pill-dot">·</span>
-        <span class="song-pill-title">${escapeHtml(song.title)}</span>
+  function renderMarquee(tracksList) {
+    const list = (tracksList && tracksList.length > 0) ? tracksList : currentTracks;
+    marqueeSection.innerHTML = `
+      <div class="marquee-header">
+        <div class="marquee-badge">
+          <span class="marquee-badge-dot"></span>
+          <span>Explore Famous Songs by Language</span>
+        </div>
       </div>
     `;
-  }).join('');
-}
 
-async function initBillboard() {
-  // 1. Render song pill carousels
-  renderSongRow('song-row-1', SONGS_BATCH_1);
-  renderSongRow('song-row-2', SONGS_BATCH_2);
+    // Calculate how many rows can fit down to the bottom of the screen
+    const windowH = window.innerHeight;
+    let numRows = 5;
+    if (windowH >= 900) numRows = 6;
+    else if (windowH >= 760) numRows = 5;
+    else if (windowH >= 620) numRows = 4;
+    else numRows = 3;
 
-  // Click & Enter delegation on song pill footer
-  const songFooter = document.querySelector('.hero-song-footer');
-  if (songFooter && !songFooter.dataset.bound) {
-    songFooter.dataset.bound = 'true';
-    const handlePillClick = (target) => {
-      const pill = target.closest('.song-pill');
-      if (!pill) return;
-      const q = pill.getAttribute('data-query');
-      if (q) {
-        if (heroSearchInput) {
-          heroSearchInput.value = q;
-          if (heroSearchClear) heroSearchClear.classList.remove('hidden');
-        }
-        if (ytSearchInput) {
-          ytSearchInput.value = q;
-          if (ytSearchClear) ytSearchClear.classList.remove('hidden');
-        }
-        showYouTubeSearchResultsModal(q);
+    // Distribute tracks into rows
+    const rowBuckets = Array.from({ length: numRows }, () => []);
+    list.forEach((track, i) => {
+      rowBuckets[i % numRows].push(track);
+    });
+
+    rowBuckets.forEach((bucket, rowIndex) => {
+      if (bucket.length === 0) return;
+
+      // Duplicate bucket tracks to ensure track is wider than screen width for continuous loop
+      let rowItems = [...bucket];
+      while (rowItems.length < 10) {
+        rowItems = rowItems.concat(bucket);
       }
-    };
 
-    songFooter.addEventListener('click', (e) => handlePillClick(e.target));
-    songFooter.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        handlePillClick(e.target);
-      }
+      // Alternating directions:
+      // Row 0: right (->)
+      // Row 1: left (<-)
+      // Row 2: right (->)
+      // Row 3: left (<-)
+      const isRight = (rowIndex % 2 === 0);
+      const dirClass = isRight ? 'marquee-to-right' : 'marquee-to-left';
+
+      // Vary duration slightly for an organic, dynamic look
+      const speed = 40 + ((rowIndex * 5) % 18);
+
+      const rowEl = document.createElement('div');
+      rowEl.className = `marquee-row ${dirClass}`;
+      rowEl.style.setProperty('--marquee-speed', `${speed}s`);
+
+      const makePills = () => rowItems.map(t => {
+        const queryText = t.query || `${t.artist} ${t.name}`;
+        const flagText = t.flag || '🎵';
+        return `
+          <button type="button" class="marquee-pill" data-query="${escapeHtml(queryText)}" title="Learn ${escapeHtml(t.language || 'language')} with ${escapeHtml(t.artist)} - ${escapeHtml(t.name)}">
+            <span class="marquee-pill-flag">${flagText}</span>
+            <span class="marquee-pill-artist">${escapeHtml(t.artist)}</span>
+            <span class="marquee-pill-divider">•</span>
+            <span class="marquee-pill-name">${escapeHtml(t.name)}</span>
+          </button>
+        `;
+      }).join('');
+
+      const trackA = document.createElement('div');
+      trackA.className = 'marquee-track';
+      trackA.innerHTML = makePills();
+
+      const trackB = document.createElement('div');
+      trackB.className = 'marquee-track';
+      trackB.setAttribute('aria-hidden', 'true');
+      trackB.innerHTML = makePills();
+
+      rowEl.appendChild(trackA);
+      rowEl.appendChild(trackB);
+      marqueeSection.appendChild(rowEl);
     });
   }
 
-  // 2. Pre-render initial covers immediately so the user never sees a blank screen
-  const initialCovers = shuffleArray([...FALLBACK_COVERS, ...FALLBACK_COVERS, ...FALLBACK_COVERS, ...FALLBACK_COVERS]);
-  const initialChunk = Math.ceil(initialCovers.length / 3);
-  renderBillboardRow('row-1', initialCovers.slice(0, initialChunk));
-  renderBillboardRow('row-2', initialCovers.slice(initialChunk, initialChunk * 2));
-  renderBillboardRow('row-3', initialCovers.slice(initialChunk * 2));
+  // 1. Render immediately so the user never sees a blank space
+  renderMarquee(currentTracks);
 
-  // 3. Fetch fresh album covers from iTunes Search API
-  try {
-    const randomKeywords = shuffleArray(SEED_KEYWORDS).slice(0, 4);
-    const batches = await Promise.all(randomKeywords.map(term => fetchItunesAlbums(term)));
-    let allArtworks = shuffleArray(batches.flat());
-
-    if (allArtworks.length < 24) {
-      allArtworks = shuffleArray([...allArtworks, ...FALLBACK_COVERS, ...FALLBACK_COVERS]);
+  // 2. Click delegation on marqueeSection
+  marqueeSection.addEventListener('click', (e) => {
+    const pill = e.target.closest('.marquee-pill');
+    if (!pill) return;
+    const q = pill.getAttribute('data-query');
+    if (q) {
+      if (heroSearchInput) {
+        heroSearchInput.value = q;
+        if (heroSearchClear) heroSearchClear.classList.remove('hidden');
+      }
+      if (ytSearchInput) {
+        ytSearchInput.value = q;
+        if (ytSearchClear) ytSearchClear.classList.remove('hidden');
+      }
+      showYouTubeSearchResultsModal(q);
     }
+  });
 
-    const chunkSize = Math.ceil(allArtworks.length / 3);
-    renderBillboardRow('row-1', allArtworks.slice(0, chunkSize));
-    renderBillboardRow('row-2', allArtworks.slice(chunkSize, chunkSize * 2));
-    renderBillboardRow('row-3', allArtworks.slice(chunkSize * 2));
-  } catch (err) {
-    console.warn('Billboard album cover fetch notice:', err);
-  }
+  // 3. Re-adjust number of rows on resize
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      renderMarquee(currentTracks);
+    }, 250);
+  });
+
+  // 4. Fetch live Last.fm trending tracks asynchronously
+  fetch('/api/trending')
+    .then(res => res.ok ? res.json() : null)
+    .then(data => {
+      if (Array.isArray(data?.tracks) && data.tracks.length > 0) {
+        currentTracks = data.tracks;
+        renderMarquee(currentTracks);
+      }
+    })
+    .catch(err => {
+      console.warn('Could not fetch live trending tracks, using fallback:', err);
+    });
 }
 
 /**
@@ -1687,8 +1607,8 @@ function initYouTubeSearchAutocomplete() {
     submitBtnEl: heroSearchSubmit
   });
 
-  // 3. Hero Billboard & Animated Song Carousel
-  initBillboard();
+  // 3. Live Last.fm Multi-Row Trending Marquee
+  initTrendingMarquee();
 
   // 4. Header Brand Click -> Return to Landing Search
   const headerBrand = document.querySelector('.header-brand');
