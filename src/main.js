@@ -543,35 +543,14 @@ function renderLyrics(lyrics) {
     contentEl.appendChild(originalEl);
     contentEl.appendChild(translatedEl);
 
-    // Action container: 1-click sync anchor button + play icon
+    // Action play indicator icon
     const actionEl = document.createElement('div');
     actionEl.className = 'lyric-action';
-
-    const anchorBtn = document.createElement('button');
-    anchorBtn.className = 'lyric-sync-anchor-btn';
-    anchorBtn.title = '🎯 Snap this line to current audio playback (1-click sync)';
-    anchorBtn.setAttribute('aria-label', 'Anchor line to playback');
-    anchorBtn.innerHTML = `
-      <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="12" cy="12" r="10"></circle>
-        <circle cx="12" cy="12" r="3"></circle>
-      </svg>
-    `;
-    anchorBtn.addEventListener('click', (e) => {
-      e.stopPropagation(); // Avoid triggering line seek
-      calibrateSyncToLine(line.start);
-    });
-
-    const playIcon = document.createElement('div');
-    playIcon.className = 'lyric-play-icon';
-    playIcon.innerHTML = `
+    actionEl.innerHTML = `
       <svg class="icon-sm" viewBox="0 0 24 24" fill="currentColor">
         <polygon points="5 3 19 12 5 21 5 3" />
       </svg>
     `;
-
-    actionEl.appendChild(anchorBtn);
-    actionEl.appendChild(playIcon);
 
     row.appendChild(timeEl);
     row.appendChild(contentEl);

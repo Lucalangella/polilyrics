@@ -2188,43 +2188,7 @@ button,
   opacity: 1;
 }
 
-.lyric-sync-anchor-btn {
-  background: transparent;
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-xs);
-  padding: 0.22rem 0.32rem;
-  color: var(--text-tertiary);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all var(--transition-fast);
-  touch-action: manipulation;
-  -webkit-user-select: none;
-  user-select: none;
-}
-
-.lyric-sync-anchor-btn:hover {
-  background: var(--accent-gold-subtle);
-  border-color: var(--accent-gold);
-  color: var(--accent-gold);
-  transform: scale(1.1);
-}
-
-.lyric-row.active .lyric-sync-anchor-btn {
-  border-color: var(--accent-gold-border);
-  color: var(--accent-gold);
-}
-
-.lyric-play-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-tertiary);
-  transition: color var(--transition-fast);
-}
-
-.lyric-row.active .lyric-play-icon {
+.lyric-row.active .lyric-action {
   color: var(--accent-gold);
 }
 
