@@ -864,8 +864,8 @@ html, body {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #d51007; /* Last.fm signature red */
-  box-shadow: 0 0 8px rgba(213, 16, 7, 0.7);
+  background: var(--accent-gold);
+  box-shadow: 0 0 8px var(--accent-gold);
 }
 
 .marquee-row {
@@ -963,36 +963,13 @@ html, body {
   font-weight: 500;
 }
 
-.marquee-pill-icon {
-  width: 13px;
-  height: 13px;
-  color: var(--accent-gold);
-  opacity: 0.7;
+.marquee-pill-flag {
+  font-size: 1.05rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
   flex-shrink: 0;
-  transition: opacity var(--transition-fast), transform var(--transition-fast);
-}
-
-.marquee-pill:hover .marquee-pill-icon {
-  opacity: 1;
-  transform: scale(1.15);
-}
-
-@media (max-width: 640px) {
-  .hero-search-landing {
-    padding: 2rem 1rem 3rem;
-  }
-  .hero-search-form {
-    height: 48px;
-    padding: 0 0.35rem 0 0.85rem;
-  }
-  .hero-search-submit {
-    height: 38px;
-    padding: 0 0.9rem;
-    font-size: 0.84rem;
-  }
-  .hero-search-input {
-    font-size: 0.92rem;
-  }
+  margin-right: 0.1rem;
 }
 
 /* ==========================================================================
@@ -2486,39 +2463,261 @@ html, body {
 }
 
 @media (max-width: 768px) {
+  /* Bottom Player Bar Mobile Overhaul */
+  .bottom-player-bar {
+    padding-bottom: max(0.45rem, env(safe-area-inset-bottom));
+  }
+
   .bottom-player-content {
     display: flex;
     flex-direction: column;
-    gap: 0.4rem;
-    padding: 0.5rem 0.75rem;
+    gap: 0.35rem;
+    padding: 0.45rem 0.65rem 0.35rem;
   }
 
-  .bottom-bar-center {
-    order: 1;
-    width: 100%;
-  }
-
+  /* Row 1: Track meta + Time + Main playback controls */
   .bottom-bar-left {
-    order: 2;
     width: 100%;
+    order: 1;
+    display: flex;
+    align-items: center;
     justify-content: space-between;
+    gap: 0.5rem;
   }
 
-  .bottom-bar-right {
-    display: none;
+  .track-meta {
+    max-width: 170px;
+    min-width: 0;
+  }
+
+  .track-name {
+    font-size: 0.82rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .track-artist {
+    font-size: 0.7rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .track-disc-icon {
     display: none;
   }
+
+  /* Transport controls row */
+  .bottom-bar-center {
+    width: 100%;
+    order: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .bottom-bar-center .playback-controls {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.3rem;
+  }
+
+  /* Row 2: Sync Calibration & Speed (Now accessible on mobile!) */
+  .bottom-bar-right {
+    display: flex !important;
+    width: 100%;
+    order: 3;
+    justify-content: center;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    padding-top: 0.25rem;
+    margin-top: 0.1rem;
+  }
+
+  .bottom-bar-right .sync-offset-bar {
+    width: 100%;
+    justify-content: center;
+    padding: 0.15rem 0.35rem;
+    background: transparent;
+    border: none;
+    gap: 0.35rem;
+  }
+
+  .sync-buttons-group {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+  }
+
+  .sync-btn, .sync-reset-btn {
+    padding: 0.2rem 0.45rem;
+    font-size: 0.72rem;
+    min-height: 26px;
+  }
+
+  .sync-value {
+    font-size: 0.76rem;
+    padding: 0.1rem 0.35rem;
+  }
+
+  .volume-slider-wrapper {
+    display: none; /* Hide slider on mobile, tap volume icon to mute/unmute */
+  }
+}
+
+@media (max-width: 640px) {
+  /* Header Mobile Optimization */
+  .app-header {
+    height: 58px;
+    min-height: 58px;
+    padding: 0 0.75rem;
+  }
+
+  .brand-icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .brand-icon svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  .brand-title {
+    font-size: 1.02rem;
+  }
+
+  .brand-subtitle {
+    display: none;
+  }
+
+  .lang-label-text {
+    display: none !important;
+  }
+
+  .control-group {
+    padding: 0.2rem 0.4rem;
+  }
+
+  .select-input {
+    font-size: 0.78rem;
+  }
+
+  /* Landing Hero Mobile Optimization */
+  .hero-search-landing {
+    padding: 1.25rem 0.75rem 0.5rem;
+    justify-content: flex-start;
+  }
+
+  .hero-content {
+    padding: 0 0.5rem;
+  }
+
+  .hero-badge {
+    font-size: 0.68rem;
+    padding: 0.22rem 0.65rem;
+    margin-bottom: 0.85rem;
+  }
+
+  .hero-title {
+    font-size: clamp(1.85rem, 7.5vw, 2.35rem);
+    line-height: 1.15;
+    margin-bottom: 0.65rem;
+  }
+
+  .hero-subtitle {
+    font-size: 0.92rem;
+    line-height: 1.45;
+    margin-bottom: 1.25rem;
+  }
+
+  .hero-search-box-wrapper {
+    margin-bottom: 0.85rem;
+  }
+
+  .hero-search-form {
+    height: 52px;
+    padding: 0 0.35rem 0 1rem;
+  }
+
+  .hero-search-icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 0.65rem;
+  }
+
+  .hero-search-input {
+    font-size: 1rem; /* >=16px prevents iOS Safari viewport auto-zoom! */
+  }
+
+  .hero-search-submit {
+    height: 40px;
+    padding: 0 1rem;
+    font-size: 0.88rem;
+    gap: 0.3rem;
+  }
+
+  .marquee-section {
+    padding: 0.35rem 0 0.75rem;
+    gap: 0.5rem;
+    touch-action: pan-y;
+  }
+
+  .marquee-pill {
+    padding: 0.42rem 0.85rem;
+    font-size: 0.8rem;
+    gap: 0.45rem;
+  }
+
+  .marquee-pill-flag {
+    font-size: 0.95rem;
+  }
+
+  /* Lyrics on small screens */
+  .lyrics-toolbar {
+    height: 38px;
+    min-height: 38px;
+    padding: 0 0.5rem;
+  }
+
+  .search-box {
+    max-width: 120px;
+    height: 28px;
+  }
+
+  .search-input {
+    font-size: 0.78rem;
+  }
+
+  .lyrics-scroll-container {
+    padding: 0.5rem 0.5rem 2.5rem;
+  }
+
+  .lyric-row {
+    padding: 0.55rem 0.65rem;
+    gap: 0.5rem;
+  }
+
+  .lyric-orig {
+    font-size: 1rem;
+  }
+
+  .lyric-trans {
+    font-size: 0.86rem;
+  }
 }
 
 @media (max-width: 480px) {
+  /* Ultra-compact mode for narrow mobile screens */
   .app-header {
     padding: 0 0.5rem;
   }
 
-  .brand-text {
+  /* When search container is active in header, collapse brand to icon */
+  .app-layout:not(.landing-mode) .brand-text {
     display: none;
   }
 
@@ -2527,20 +2726,24 @@ html, body {
   }
 
   .yt-search-btn {
-    width: 36px;
-  }
-
-  .time-display {
-    display: none;
+    width: 34px;
   }
 
   .video-pane {
-    max-height: 28vh;
+    max-height: 26vh;
   }
 
   .video-aspect-wrapper {
-    padding-top: min(56.25%, 28vh);
-    max-height: 28vh;
+    padding-top: min(56.25%, 26vh);
+    max-height: 26vh;
+  }
+
+  .track-meta {
+    max-width: 130px;
+  }
+
+  .time-display {
+    font-size: 0.72rem;
   }
 }
 

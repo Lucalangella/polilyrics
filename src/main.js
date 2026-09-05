@@ -28,6 +28,7 @@ import {
 } from './lyrics-service.js';
 import { translationService } from './translation-service.js';
 import { playerController } from './player.js';
+import { FAMOUS_SONGS } from './famous-songs.js';
 
 // Expose language router utility reading navigator.language with in-memory / localStorage overrides
 export { languageRouter };
@@ -1243,66 +1244,15 @@ async function initTrendingMarquee() {
   const marqueeSection = document.getElementById('marquee-section');
   if (!marqueeSection) return;
 
-  const FALLBACK_TRACKS = [
-    { artist: 'Billie Eilish', name: 'Birds of a Feather', query: 'Billie Eilish Birds of a Feather' },
-    { artist: 'Sabrina Carpenter', name: 'Espresso', query: 'Sabrina Carpenter Espresso' },
-    { artist: 'Chappell Roan', name: 'Good Luck, Babe!', query: 'Chappell Roan Good Luck, Babe!' },
-    { artist: 'Lady Gaga & Bruno Mars', name: 'Die With A Smile', query: 'Lady Gaga Bruno Mars Die With A Smile' },
-    { artist: 'Kendrick Lamar', name: 'Not Like Us', query: 'Kendrick Lamar Not Like Us' },
-    { artist: 'Post Malone & Morgan Wallen', name: 'I Had Some Help', query: 'Post Malone I Had Some Help' },
-    { artist: 'Coldplay', name: 'Yellow', query: 'Coldplay Yellow' },
-    { artist: 'Tame Impala', name: 'The Less I Know The Better', query: 'Tame Impala The Less I Know The Better' },
-    { artist: 'Stromae', name: 'Papaoutai', query: 'Stromae Papaoutai' },
-    { artist: 'Videoclub', name: 'Amour Plastique', query: 'Videoclub Amour Plastique' },
-    { artist: 'Indila', name: 'Dernière Danse', query: 'Indila Dernière Danse' },
-    { artist: 'Rosé & Bruno Mars', name: 'APT.', query: 'Rosé Bruno Mars APT' },
-    { artist: 'Charli xcx', name: 'Apple', query: 'Charli xcx Apple' },
-    { artist: 'Benson Boone', name: 'Beautiful Things', query: 'Benson Boone Beautiful Things' },
-    { artist: 'Hozier', name: 'Too Sweet', query: 'Hozier Too Sweet' },
-    { artist: 'The Weeknd', name: 'Timeless', query: 'The Weeknd Timeless' },
-    { artist: 'Dua Lipa', name: 'Houdini', query: 'Dua Lipa Houdini' },
-    { artist: 'Taylor Swift', name: 'Cruel Summer', query: 'Taylor Swift Cruel Summer' },
-    { artist: 'Tommy Richman', name: 'MILLION DOLLAR BABY', query: 'Tommy Richman MILLION DOLLAR BABY' },
-    { artist: 'Shakira', name: 'Bzrp Music Sessions, Vol. 53', query: 'Shakira Bzrp Music Sessions' },
-    { artist: 'Bad Bunny', name: 'Monaco', query: 'Bad Bunny Monaco' },
-    { artist: 'Måneskin', name: 'Beggin\'', query: 'Måneskin Beggin' },
-    { artist: 'Daft Punk', name: 'Get Lucky', query: 'Daft Punk Get Lucky' },
-    { artist: 'Gazo', name: 'DIE', query: 'Gazo DIE' },
-    { artist: 'Sfera Ebbasta', name: 'Calcolatrici', query: 'Sfera Ebbasta Calcolatrici' },
-    { artist: 'Mahmood', name: 'Tuta Gold', query: 'Mahmood Tuta Gold' },
-    { artist: 'Annalisa', name: 'Sinceramente', query: 'Annalisa Sinceramente' },
-    { artist: 'Geolier', name: 'I p\' me, tu p\' te', query: 'Geolier I p me tu p te' },
-    { artist: 'Peso Pluma', name: 'Ella Baila Sola', query: 'Peso Pluma Ella Baila Sola' },
-    { artist: 'Karol G', name: 'Si Antes Te Hubiera Conocido', query: 'Karol G Si Antes Te Hubiera Conocido' },
-    { artist: 'Rauw Alejandro', name: 'Santa', query: 'Rauw Alejandro Santa' },
-    { artist: 'Aitana', name: 'Las Babys', query: 'Aitana Las Babys' },
-    { artist: 'Zaho de Sagazan', name: 'La symphonie des éclairs', query: 'Zaho de Sagazan La symphonie des eclairs' },
-    { artist: 'Aya Nakamura', name: 'Djadja', query: 'Aya Nakamura Djadja' },
-    { artist: 'Angèle', name: 'Bruxelles je t\'aime', query: 'Angele Bruxelles je t aime' },
-    { artist: 'BTS', name: 'Dynamite', query: 'BTS Dynamite' },
-    { artist: 'NewJeans', name: 'Super Shy', query: 'NewJeans Super Shy' },
-    { artist: 'YOASOBI', name: 'Idol', query: 'YOASOBI Idol' },
-    { artist: 'Fujii Kaze', name: 'Shinunoga E-Wa', query: 'Fujii Kaze Shinunoga E-Wa' },
-    { artist: 'Rema', name: 'Calm Down', query: 'Rema Calm Down' }
-  ];
-
-  const musicIconSvg = `
-    <svg class="marquee-pill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M9 18V5l12-2v13"></path>
-      <circle cx="6" cy="18" r="3"></circle>
-      <circle cx="18" cy="16" r="3"></circle>
-    </svg>
-  `;
-
-  let currentTracks = FALLBACK_TRACKS;
+  let currentTracks = FAMOUS_SONGS;
 
   function renderMarquee(tracksList) {
-    const list = tracksList || currentTracks;
+    const list = (tracksList && tracksList.length > 0) ? tracksList : currentTracks;
     marqueeSection.innerHTML = `
       <div class="marquee-header">
         <div class="marquee-badge">
           <span class="marquee-badge-dot"></span>
-          <span>Trending on Last.fm</span>
+          <span>Explore Famous Songs by Language</span>
         </div>
       </div>
     `;
@@ -1335,7 +1285,6 @@ async function initTrendingMarquee() {
       // Row 1: left (<-)
       // Row 2: right (->)
       // Row 3: left (<-)
-      // User request: "first row scrolls ->, second <- etc..."
       const isRight = (rowIndex % 2 === 0);
       const dirClass = isRight ? 'marquee-to-right' : 'marquee-to-left';
 
@@ -1348,9 +1297,10 @@ async function initTrendingMarquee() {
 
       const makePills = () => rowItems.map(t => {
         const queryText = t.query || `${t.artist} ${t.name}`;
+        const flagText = t.flag || '🎵';
         return `
-          <button type="button" class="marquee-pill" data-query="${escapeHtml(queryText)}" title="Play ${escapeHtml(t.artist)} - ${escapeHtml(t.name)}">
-            ${musicIconSvg}
+          <button type="button" class="marquee-pill" data-query="${escapeHtml(queryText)}" title="Learn ${escapeHtml(t.language || 'language')} with ${escapeHtml(t.artist)} - ${escapeHtml(t.name)}">
+            <span class="marquee-pill-flag">${flagText}</span>
             <span class="marquee-pill-artist">${escapeHtml(t.artist)}</span>
             <span class="marquee-pill-divider">•</span>
             <span class="marquee-pill-name">${escapeHtml(t.name)}</span>

@@ -1,4 +1,13 @@
-const FAMOUS_SONGS = [
+/**
+ * Curated dataset of famous, iconic songs for language learning across multiple languages.
+ * Each entry has:
+ * - flag: country/language flag emoji
+ * - language: language name
+ * - artist: performer/band
+ * - name: track title
+ * - query: optimized search query for YouTube & LRCLIB
+ */
+export const FAMOUS_SONGS = [
   // 🇮🇹 ITALIAN
   { flag: '🇮🇹', language: 'Italian', artist: 'Andrea Bocelli', name: 'Con te partirò', query: 'Andrea Bocelli Con te partiro' },
   { flag: '🇮🇹', language: 'Italian', artist: 'Ricchi e Poveri', name: 'Sarà perché ti amo', query: 'Ricchi e Poveri Sara perche ti amo' },
@@ -77,14 +86,3 @@ const FAMOUS_SONGS = [
   { flag: '🇧🇷', language: 'Portuguese', artist: 'Anitta', name: 'Envolver', query: 'Anitta Envolver' },
   { flag: '🇧🇷', language: 'Portuguese', artist: 'Kaoma', name: 'Lambada', query: 'Kaoma Lambada' }
 ];
-
-export async function onRequestGet() {
-  return new Response(JSON.stringify({ tracks: FAMOUS_SONGS, source: 'curated-languages' }), {
-    status: 200,
-    headers: {
-      'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*',
-      'Cache-Control': 'public, max-age=86400'
-    }
-  });
-}
