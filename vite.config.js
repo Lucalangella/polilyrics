@@ -132,6 +132,59 @@ function youtubeSearchPlugin() {
         return;
       }
     }
+
+    if (req.url && req.url.startsWith('/api/trending')) {
+      try {
+        const response = await fetch('https://www.last.fm/charts', {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept-Language': 'en-US,en;q=0.9'
+          }
+        });
+        let tracks = [];
+        if (response.ok) {
+          const html = await response.text();
+          const regex = /data-track-name="([^"]+)"\s+data-track-url="\/music\/([^/"]+)\/_\/([^"]+)"/g;
+          let m;
+          const seen = new Set();
+          const decodeHtmlEntities = (s) => (s || '')
+            .replace(/&amp;/g, '&')
+            .replace(/&quot;/g, '"')
+            .replace(/&#39;/g, "'")
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/&#(\d+);/g, (_, d) => String.fromCharCode(d));
+
+          while ((m = regex.exec(html)) !== null) {
+            const rawTrack = decodeHtmlEntities(m[1]);
+            let rawArtist = decodeURIComponent(m[2].replace(/\+/g, ' '));
+            rawArtist = decodeHtmlEntities(rawArtist);
+            const key = `${rawArtist} - ${rawTrack}`.toLowerCase();
+            if (!seen.has(key)) {
+              seen.add(key);
+              tracks.push({
+                artist: rawArtist,
+                name: rawTrack,
+                label: `${rawArtist} — ${rawTrack}`,
+                query: `${rawArtist} ${rawTrack}`
+              });
+            }
+          }
+        }
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.end(JSON.stringify({ tracks }));
+        return;
+      } catch (err) {
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.end(JSON.stringify({ tracks: [] }));
+        return;
+      }
+    }
+
     next();
   };
 

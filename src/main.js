@@ -387,6 +387,7 @@ function initLanguageRouting() {
 }
 
 function updateDetectedBadge() {
+  if (!detectedBadge) return;
   if (languageRouter.isAutoDetected()) {
     detectedBadge.classList.remove('hidden');
     detectedBadge.title = `Auto-detected from browser: ${languageRouter.getCurrentLanguage().toUpperCase()}`;
@@ -1235,6 +1236,188 @@ function setupAutocomplete({
 }
 
 /**
+ * Loads live trending tracks from Last.fm (or curated fallback) and creates
+ * multiple alternating infinite marquee rows that fill down to the bottom of the screen.
+ */
+async function initTrendingMarquee() {
+  const marqueeSection = document.getElementById('marquee-section');
+  if (!marqueeSection) return;
+
+  const FALLBACK_TRACKS = [
+    { artist: 'Billie Eilish', name: 'Birds of a Feather', query: 'Billie Eilish Birds of a Feather' },
+    { artist: 'Sabrina Carpenter', name: 'Espresso', query: 'Sabrina Carpenter Espresso' },
+    { artist: 'Chappell Roan', name: 'Good Luck, Babe!', query: 'Chappell Roan Good Luck, Babe!' },
+    { artist: 'Lady Gaga & Bruno Mars', name: 'Die With A Smile', query: 'Lady Gaga Bruno Mars Die With A Smile' },
+    { artist: 'Kendrick Lamar', name: 'Not Like Us', query: 'Kendrick Lamar Not Like Us' },
+    { artist: 'Post Malone & Morgan Wallen', name: 'I Had Some Help', query: 'Post Malone I Had Some Help' },
+    { artist: 'Coldplay', name: 'Yellow', query: 'Coldplay Yellow' },
+    { artist: 'Tame Impala', name: 'The Less I Know The Better', query: 'Tame Impala The Less I Know The Better' },
+    { artist: 'Stromae', name: 'Papaoutai', query: 'Stromae Papaoutai' },
+    { artist: 'Videoclub', name: 'Amour Plastique', query: 'Videoclub Amour Plastique' },
+    { artist: 'Indila', name: 'Dernière Danse', query: 'Indila Dernière Danse' },
+    { artist: 'Rosé & Bruno Mars', name: 'APT.', query: 'Rosé Bruno Mars APT' },
+    { artist: 'Charli xcx', name: 'Apple', query: 'Charli xcx Apple' },
+    { artist: 'Benson Boone', name: 'Beautiful Things', query: 'Benson Boone Beautiful Things' },
+    { artist: 'Hozier', name: 'Too Sweet', query: 'Hozier Too Sweet' },
+    { artist: 'The Weeknd', name: 'Timeless', query: 'The Weeknd Timeless' },
+    { artist: 'Dua Lipa', name: 'Houdini', query: 'Dua Lipa Houdini' },
+    { artist: 'Taylor Swift', name: 'Cruel Summer', query: 'Taylor Swift Cruel Summer' },
+    { artist: 'Tommy Richman', name: 'MILLION DOLLAR BABY', query: 'Tommy Richman MILLION DOLLAR BABY' },
+    { artist: 'Shakira', name: 'Bzrp Music Sessions, Vol. 53', query: 'Shakira Bzrp Music Sessions' },
+    { artist: 'Bad Bunny', name: 'Monaco', query: 'Bad Bunny Monaco' },
+    { artist: 'Måneskin', name: 'Beggin\'', query: 'Måneskin Beggin' },
+    { artist: 'Daft Punk', name: 'Get Lucky', query: 'Daft Punk Get Lucky' },
+    { artist: 'Gazo', name: 'DIE', query: 'Gazo DIE' },
+    { artist: 'Sfera Ebbasta', name: 'Calcolatrici', query: 'Sfera Ebbasta Calcolatrici' },
+    { artist: 'Mahmood', name: 'Tuta Gold', query: 'Mahmood Tuta Gold' },
+    { artist: 'Annalisa', name: 'Sinceramente', query: 'Annalisa Sinceramente' },
+    { artist: 'Geolier', name: 'I p\' me, tu p\' te', query: 'Geolier I p me tu p te' },
+    { artist: 'Peso Pluma', name: 'Ella Baila Sola', query: 'Peso Pluma Ella Baila Sola' },
+    { artist: 'Karol G', name: 'Si Antes Te Hubiera Conocido', query: 'Karol G Si Antes Te Hubiera Conocido' },
+    { artist: 'Rauw Alejandro', name: 'Santa', query: 'Rauw Alejandro Santa' },
+    { artist: 'Aitana', name: 'Las Babys', query: 'Aitana Las Babys' },
+    { artist: 'Zaho de Sagazan', name: 'La symphonie des éclairs', query: 'Zaho de Sagazan La symphonie des eclairs' },
+    { artist: 'Aya Nakamura', name: 'Djadja', query: 'Aya Nakamura Djadja' },
+    { artist: 'Angèle', name: 'Bruxelles je t\'aime', query: 'Angele Bruxelles je t aime' },
+    { artist: 'BTS', name: 'Dynamite', query: 'BTS Dynamite' },
+    { artist: 'NewJeans', name: 'Super Shy', query: 'NewJeans Super Shy' },
+    { artist: 'YOASOBI', name: 'Idol', query: 'YOASOBI Idol' },
+    { artist: 'Fujii Kaze', name: 'Shinunoga E-Wa', query: 'Fujii Kaze Shinunoga E-Wa' },
+    { artist: 'Rema', name: 'Calm Down', query: 'Rema Calm Down' }
+  ];
+
+  const musicIconSvg = `
+    <svg class="marquee-pill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M9 18V5l12-2v13"></path>
+      <circle cx="6" cy="18" r="3"></circle>
+      <circle cx="18" cy="16" r="3"></circle>
+    </svg>
+  `;
+
+  let currentTracks = FALLBACK_TRACKS;
+
+  function renderMarquee(tracksList) {
+    const list = tracksList || currentTracks;
+    marqueeSection.innerHTML = `
+      <div class="marquee-header">
+        <div class="marquee-badge">
+          <span class="marquee-badge-dot"></span>
+          <span>Trending on Last.fm</span>
+        </div>
+      </div>
+    `;
+
+    // Calculate how many rows can fit down to the bottom of the screen
+    const windowH = window.innerHeight;
+    let numRows = 5;
+    if (windowH >= 900) numRows = 6;
+    else if (windowH >= 760) numRows = 5;
+    else if (windowH >= 620) numRows = 4;
+    else numRows = 3;
+
+    // Distribute tracks into rows
+    const rowBuckets = Array.from({ length: numRows }, () => []);
+    list.forEach((track, i) => {
+      rowBuckets[i % numRows].push(track);
+    });
+
+    rowBuckets.forEach((bucket, rowIndex) => {
+      if (bucket.length === 0) return;
+
+      // Duplicate bucket tracks to ensure track is wider than screen width for continuous loop
+      let rowItems = [...bucket];
+      while (rowItems.length < 10) {
+        rowItems = rowItems.concat(bucket);
+      }
+
+      // Alternating directions:
+      // Row 0: right (->)
+      // Row 1: left (<-)
+      // Row 2: right (->)
+      // Row 3: left (<-)
+      // User request: "first row scrolls ->, second <- etc..."
+      const isRight = (rowIndex % 2 === 0);
+      const dirClass = isRight ? 'marquee-to-right' : 'marquee-to-left';
+
+      // Vary duration slightly for an organic, dynamic look
+      const speed = 40 + ((rowIndex * 5) % 18);
+
+      const rowEl = document.createElement('div');
+      rowEl.className = `marquee-row ${dirClass}`;
+      rowEl.style.setProperty('--marquee-speed', `${speed}s`);
+
+      const makePills = () => rowItems.map(t => {
+        const queryText = t.query || `${t.artist} ${t.name}`;
+        return `
+          <button type="button" class="marquee-pill" data-query="${escapeHtml(queryText)}" title="Play ${escapeHtml(t.artist)} - ${escapeHtml(t.name)}">
+            ${musicIconSvg}
+            <span class="marquee-pill-artist">${escapeHtml(t.artist)}</span>
+            <span class="marquee-pill-divider">•</span>
+            <span class="marquee-pill-name">${escapeHtml(t.name)}</span>
+          </button>
+        `;
+      }).join('');
+
+      const trackA = document.createElement('div');
+      trackA.className = 'marquee-track';
+      trackA.innerHTML = makePills();
+
+      const trackB = document.createElement('div');
+      trackB.className = 'marquee-track';
+      trackB.setAttribute('aria-hidden', 'true');
+      trackB.innerHTML = makePills();
+
+      rowEl.appendChild(trackA);
+      rowEl.appendChild(trackB);
+      marqueeSection.appendChild(rowEl);
+    });
+  }
+
+  // 1. Render immediately so the user never sees a blank space
+  renderMarquee(currentTracks);
+
+  // 2. Click delegation on marqueeSection
+  marqueeSection.addEventListener('click', (e) => {
+    const pill = e.target.closest('.marquee-pill');
+    if (!pill) return;
+    const q = pill.getAttribute('data-query');
+    if (q) {
+      if (heroSearchInput) {
+        heroSearchInput.value = q;
+        if (heroSearchClear) heroSearchClear.classList.remove('hidden');
+      }
+      if (ytSearchInput) {
+        ytSearchInput.value = q;
+        if (ytSearchClear) ytSearchClear.classList.remove('hidden');
+      }
+      showYouTubeSearchResultsModal(q);
+    }
+  });
+
+  // 3. Re-adjust number of rows on resize
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      renderMarquee(currentTracks);
+    }, 250);
+  });
+
+  // 4. Fetch live Last.fm trending tracks asynchronously
+  fetch('/api/trending')
+    .then(res => res.ok ? res.json() : null)
+    .then(data => {
+      if (Array.isArray(data?.tracks) && data.tracks.length > 0) {
+        currentTracks = data.tracks;
+        renderMarquee(currentTracks);
+      }
+    })
+    .catch(err => {
+      console.warn('Could not fetch live trending tracks, using fallback:', err);
+    });
+}
+
+/**
  * Initializes the YouTube Search Bar and Hero Landing Autocomplete Engines
  */
 function initYouTubeSearchAutocomplete() {
@@ -1256,24 +1439,8 @@ function initYouTubeSearchAutocomplete() {
     submitBtnEl: heroSearchSubmit
   });
 
-  // 3. Trending Track Pills
-  const trendingPills = document.querySelectorAll('.trending-pill');
-  trendingPills.forEach((pill) => {
-    pill.addEventListener('click', () => {
-      const q = pill.getAttribute('data-query');
-      if (q) {
-        if (heroSearchInput) {
-          heroSearchInput.value = q;
-          if (heroSearchClear) heroSearchClear.classList.remove('hidden');
-        }
-        if (ytSearchInput) {
-          ytSearchInput.value = q;
-          if (ytSearchClear) ytSearchClear.classList.remove('hidden');
-        }
-        showYouTubeSearchResultsModal(q);
-      }
-    });
-  });
+  // 3. Live Last.fm Multi-Row Trending Marquee
+  initTrendingMarquee();
 
   // 4. Header Brand Click -> Return to Landing Search
   const headerBrand = document.querySelector('.header-brand');
