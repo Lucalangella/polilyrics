@@ -55,27 +55,8 @@ const FAMOUS_SONGS = [
   { flag: '🇩🇪', language: 'German', artist: 'Namika', name: 'Lieblingsmensch', query: 'Namika Lieblingsmensch' },
   { flag: '🇩🇪', language: 'German', artist: 'CRO', name: 'Traum', query: 'CRO Traum' },
   { flag: '🇩🇪', language: 'German', artist: 'Herbert Grönemeyer', name: 'Mensch', query: 'Herbert Gronemeyer Mensch' },
-  { flag: '🇩🇪', language: 'German', artist: 'Apache 207', name: 'Komet', query: 'Apache 207 Komet' },
-
-  // 🇯🇵 JAPANESE
-  { flag: '🇯🇵', language: 'Japanese', artist: 'YOASOBI', name: 'Idol', query: 'YOASOBI Idol' },
-  { flag: '🇯🇵', language: 'Japanese', artist: 'Fujii Kaze', name: 'Shinunoga E-Wa', query: 'Fujii Kaze Shinunoga E-Wa' },
-  { flag: '🇯🇵', language: 'Japanese', artist: 'Kenshi Yonezu', name: 'Lemon', query: 'Kenshi Yonezu Lemon' },
-  { flag: '🇯🇵', language: 'Japanese', artist: 'Utada Hikaru', name: 'First Love', query: 'Utada Hikaru First Love' },
-  { flag: '🇯🇵', language: 'Japanese', artist: 'LiSA', name: 'Gurenge', query: 'LiSA Gurenge' },
-
-  // 🇰🇷 KOREAN
-  { flag: '🇰🇷', language: 'Korean', artist: 'BTS', name: 'Dynamite', query: 'BTS Dynamite' },
-  { flag: '🇰🇷', language: 'Korean', artist: 'BLACKPINK', name: 'How You Like That', query: 'BLACKPINK How You Like That' },
-  { flag: '🇰🇷', language: 'Korean', artist: 'NewJeans', name: 'Super Shy', query: 'NewJeans Super Shy' },
-  { flag: '🇰🇷', language: 'Korean', artist: 'PSY', name: 'Gangnam Style', query: 'PSY Gangnam Style' },
-  { flag: '🇰🇷', language: 'Korean', artist: 'Rosé & Bruno Mars', name: 'APT.', query: 'Rose Bruno Mars APT' },
-
-  // 🇧🇷 PORTUGUESE
-  { flag: '🇧🇷', language: 'Portuguese', artist: 'Astrud Gilberto & Stan Getz', name: 'Garota de Ipanema', query: 'Garota de Ipanema' },
-  { flag: '🇧🇷', language: 'Portuguese', artist: 'Michel Teló', name: 'Ai Se Eu Te Pego', query: 'Michel Telo Ai Se Eu Te Pego' },
-  { flag: '🇧🇷', language: 'Portuguese', artist: 'Anitta', name: 'Envolver', query: 'Anitta Envolver' },
-  { flag: '🇧🇷', language: 'Portuguese', artist: 'Kaoma', name: 'Lambada', query: 'Kaoma Lambada' }
+  { flag: '🇩🇪', language: 'German', artist: 'Tokio Hotel', name: 'Durch den Monsun', query: 'Tokio Hotel Durch den Monsun' },
+  { flag: '🇩🇪', language: 'German', artist: 'Kraftwerk', name: 'Das Model', query: 'Kraftwerk Das Model' }
 ];
 
 export async function onRequestGet() {
