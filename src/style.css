@@ -2451,6 +2451,7 @@ html, body {
   .bottom-player-content {
     display: flex;
     flex-direction: column;
+    justify-content: flex-start;
     gap: 0.35rem;
     padding: 0.4rem 0.65rem 0.35rem;
     min-height: auto;
@@ -2459,6 +2460,8 @@ html, body {
   /* Row 1: Track meta + Time + Main playback controls */
   .bottom-bar-left {
     width: 100%;
+    flex: 0 0 auto !important;
+    height: auto !important;
     order: 1;
     display: flex;
     align-items: center;
@@ -2549,6 +2552,16 @@ html, body {
 
   .volume-slider-wrapper {
     display: none; /* Hide slider on mobile, tap volume icon to mute/unmute */
+  }
+
+  /* Hide tutorial footer on mobile to maximize lyrics vertical space */
+  .lyrics-footer {
+    display: none !important;
+  }
+
+  .lyrics-scroll-container {
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 12px, black calc(100% - 16px), transparent 100%) !important;
+    mask-image: linear-gradient(to bottom, transparent 0%, black 12px, black calc(100% - 16px), transparent 100%) !important;
   }
 
   /* YouTube Search Results Modal Mobile */
