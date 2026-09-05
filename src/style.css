@@ -1045,7 +1045,10 @@ button,
 }
 
 .hero-gradient-text {
-  color: #f97316;
+  background: linear-gradient(to right, #fb923c, #f59e0b);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
   display: inline-block;
 }
 
@@ -3647,12 +3650,22 @@ button,
     font-size: 0.72rem;
   }
 
-  .hero-search-submit span {
+  .hero-search-submit span:first-child {
     display: none;
   }
 
+  .hero-search-submit .hero-search-arrow {
+    display: inline-block;
+    font-size: 1.05rem;
+    line-height: 1;
+  }
+
   .hero-search-submit {
-    padding: 0 0.65rem;
+    padding: 0.45rem 0.85rem;
+    min-width: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .yt-card-play-btn span {
