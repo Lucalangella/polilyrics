@@ -355,21 +355,97 @@
                   <circle cx="12" cy="12" r="10" />
                   <polyline points="12 6 12 12 16 14" />
                 </svg>
-                <span class="sync-label">Sync Offset:</span>
+                <span class="sync-label">Sync:</span>
               </div>
               <div class="sync-buttons-group">
-                <button id="btn-sync-sub-05" class="btn btn-ghost btn-xs sync-btn" title="Lyrics appearing early? Delay lyrics -0.5s">-0.5s</button>
-                <button id="btn-sync-sub-01" class="btn btn-ghost btn-xs sync-btn" title="Nudge lyrics -0.1s">-0.1s</button>
-                <span id="sync-offset-val" class="sync-value">0.0s</span>
-                <button id="btn-sync-add-01" class="btn btn-ghost btn-xs sync-btn" title="Nudge lyrics +0.1s">+0.1s</button>
-                <button id="btn-sync-add-05" class="btn btn-ghost btn-xs sync-btn" title="Lyrics appearing late? Advance lyrics +0.5s">+0.5s</button>
+                <button id="btn-sync-sub-05" class="btn btn-ghost btn-xs sync-btn" title="Hold to repeat. Delay lyrics -0.5s">-0.5s</button>
+                <button id="btn-sync-sub-01" class="btn btn-ghost btn-xs sync-btn" title="Hold to repeat. Nudge lyrics -0.1s">-0.1s</button>
+                <button id="sync-offset-val" class="sync-value" title="Click to open full Calibration Panel (slider, 1-click snap, coarse jumps)" role="button" aria-label="Open sync calibration">0.0s</button>
+                <button id="btn-sync-add-01" class="btn btn-ghost btn-xs sync-btn" title="Hold to repeat. Nudge lyrics +0.1s">+0.1s</button>
+                <button id="btn-sync-add-05" class="btn btn-ghost btn-xs sync-btn" title="Hold to repeat. Advance lyrics +0.5s">+0.5s</button>
                 <button id="btn-sync-reset" class="btn btn-ghost btn-xs sync-reset-btn" title="Reset offset to 0.0s">↺ Reset</button>
+                <button id="btn-open-sync-modal" class="btn btn-ghost btn-xs sync-calibrate-btn" title="Open calibration modal & slider">
+                  <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                  </svg>
+                </button>
               </div>
             </div>
           </div>
         </div>
       </footer>
     </main>
+
+    <!-- Sync Calibration Modal / Quick Alignment Dialog -->
+    <div id="sync-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="sync-modal-title">
+      <div class="modal-card sync-modal-card">
+        <div class="modal-header">
+          <div class="modal-title-group">
+            <svg class="icon text-gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+            <div>
+              <h3 id="sync-modal-title">Sync Calibration</h3>
+              <p class="modal-subtitle">Align lyric timing with YouTube video playback</p>
+            </div>
+          </div>
+          <button id="sync-modal-close" class="modal-close" aria-label="Close sync modal">&times;</button>
+        </div>
+
+        <div class="modal-body sync-modal-body">
+          <!-- 1-Click Anchor Button: The instant fix for 20s intro desync! -->
+          <div class="sync-hero-action">
+            <button id="btn-sync-modal-snap" class="btn btn-primary sync-snap-large-btn" title="Snap active lyric line to current playback position">
+              <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+              <span>🎯 Snap Active Line to Audio Now</span>
+            </button>
+            <p class="sync-action-hint">When you hear a line sung, click here or the 🎯 icon on any lyric row to align the entire song instantly.</p>
+          </div>
+
+          <!-- Direct Offset Slider -->
+          <div class="sync-slider-section">
+            <div class="sync-slider-header">
+              <span class="sync-slider-label">Scrub Offset (-30s to +30s)</span>
+              <span id="sync-modal-offset-readout" class="sync-modal-readout">0.0s</span>
+            </div>
+            <input type="range" id="sync-modal-slider" min="-30" max="30" step="0.5" value="0" class="sync-range-slider" />
+            <div class="sync-slider-ticks">
+              <span>-30s</span>
+              <span>-15s</span>
+              <span>0s</span>
+              <span>+15s</span>
+              <span>+30s</span>
+            </div>
+          </div>
+
+          <!-- Coarse & Fine Step Presets -->
+          <div class="sync-presets-section">
+            <span class="sync-section-title">Coarse Jumps:</span>
+            <div class="sync-preset-buttons">
+              <button class="btn btn-ghost btn-sm sync-step-btn" data-step="-5">-5.0s</button>
+              <button class="btn btn-ghost btn-sm sync-step-btn" data-step="-1">-1.0s</button>
+              <button class="btn btn-ghost btn-sm sync-step-btn" data-step="reset">↺ 0.0s</button>
+              <button class="btn btn-ghost btn-sm sync-step-btn" data-step="1">+1.0s</button>
+              <button class="btn btn-ghost btn-sm sync-step-btn" data-step="5">+5.0s</button>
+            </div>
+          </div>
+
+          <!-- Manual Direct Input -->
+          <div class="sync-manual-input-row">
+            <label for="sync-modal-input" class="sync-manual-label">Manual Offset (seconds):</label>
+            <div class="sync-input-group">
+              <input type="number" id="sync-modal-input" step="0.1" value="0.0" class="select-input sync-number-input" />
+              <button id="btn-sync-modal-apply" class="btn btn-secondary btn-sm">Apply</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- Word Details Modal / Tooltip Popover -->
     <div id="word-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true">

@@ -194,6 +194,16 @@ const btnSyncSub01 = document.getElementById('btn-sync-sub-01');
 const btnSyncAdd01 = document.getElementById('btn-sync-add-01');
 const btnSyncAdd05 = document.getElementById('btn-sync-add-05');
 const btnSyncReset = document.getElementById('btn-sync-reset');
+const btnOpenSyncModal = document.getElementById('btn-open-sync-modal');
+
+// Sync Calibration Modal Elements
+const syncModal = document.getElementById('sync-modal');
+const syncModalClose = document.getElementById('sync-modal-close');
+const btnSyncModalSnap = document.getElementById('btn-sync-modal-snap');
+const syncModalSlider = document.getElementById('sync-modal-slider');
+const syncModalOffsetReadout = document.getElementById('sync-modal-offset-readout');
+const syncModalInput = document.getElementById('sync-modal-input');
+const btnSyncModalApply = document.getElementById('btn-sync-modal-apply');
 
 /**
  * View Management: Landing View vs Player View
@@ -208,6 +218,17 @@ function showLandingSearch() {
       heroSearchInput.focus();
     }, 50);
   }
+}
+
+function returnToLandingSearch() {
+  showLandingSearch();
+  try {
+    localStorage.removeItem('polilyrics_last_track');
+    const url = new URL(window.location.href);
+    url.searchParams.delete('v');
+    url.searchParams.delete('track');
+    window.history.pushState({}, '', url.pathname + (url.search ? url.search : ''));
+  } catch {}
 }
 
 // Full Screen Lyrics State
@@ -301,6 +322,20 @@ function loadSyncOffsetForTrack(trackId) {
   setSyncOffset(0.0, false);
 }
 
+function updateSyncModalUI() {
+  const sign = currentSyncOffset > 0 ? '+' : '';
+  const formatted = `${sign}${currentSyncOffset.toFixed(1)}s`;
+  if (syncModalOffsetReadout) {
+    syncModalOffsetReadout.textContent = formatted;
+  }
+  if (syncModalSlider) {
+    syncModalSlider.value = Math.max(-30, Math.min(30, currentSyncOffset));
+  }
+  if (syncModalInput) {
+    syncModalInput.value = currentSyncOffset.toFixed(1);
+  }
+}
+
 function setSyncOffset(val, persist = true) {
   currentSyncOffset = Math.round(val * 10) / 10;
   if (syncOffsetVal) {
@@ -310,6 +345,8 @@ function setSyncOffset(val, persist = true) {
     if (currentSyncOffset > 0) syncOffsetVal.classList.add('positive');
     else if (currentSyncOffset < 0) syncOffsetVal.classList.add('negative');
   }
+
+  updateSyncModalUI();
 
   if (persist && currentTrackId) {
     try {
@@ -327,10 +364,11 @@ function setSyncOffset(val, persist = true) {
 }
 
 function calibrateSyncToLine(lineStart) {
-  const videoTime = playerController.getCurrentTime();
+  const videoTime = playerController ? playerController.getCurrentTime() : 0;
   const newOffset = Math.round((videoTime - lineStart) * 10) / 10;
-  setSyncOffset(newOffset);
-  showToast(`🎯 Sync set to ${newOffset >= 0 ? '+' : ''}${newOffset.toFixed(1)}s`);
+  setSyncOffset(newOffset, true);
+  const sign = newOffset >= 0 ? '+' : '';
+  showToast(`🎯 Line anchored! Sync set to ${sign}${newOffset.toFixed(1)}s`);
 }
 
 function parseDurationText(durationStr) {
@@ -404,8 +442,20 @@ function initTrackSelection() {
   try {
     const urlParams = new URLSearchParams(window.location.search);
     const trackParam = urlParams.get('v') || urlParams.get('track');
-    if (trackParam) {
-      currentTrackId = trackParam;
+    const savedTrack = localStorage.getItem('polilyrics_last_track');
+    const targetId = trackParam || savedTrack;
+
+    if (targetId) {
+      const meta = getTrackMeta(targetId);
+      if (meta && meta.id === targetId) {
+        currentTrackId = targetId;
+        // Keep URL synchronized
+        const url = new URL(window.location.href);
+        if (url.searchParams.get('v') !== targetId) {
+          url.searchParams.set('v', targetId);
+          window.history.replaceState({ trackId: targetId }, '', url.toString());
+        }
+      }
     }
   } catch {}
 
@@ -493,14 +543,35 @@ function renderLyrics(lyrics) {
     contentEl.appendChild(originalEl);
     contentEl.appendChild(translatedEl);
 
-    // Action play indicator icon
+    // Action container: 1-click sync anchor button + play icon
     const actionEl = document.createElement('div');
     actionEl.className = 'lyric-action';
-    actionEl.innerHTML = `
+
+    const anchorBtn = document.createElement('button');
+    anchorBtn.className = 'lyric-sync-anchor-btn';
+    anchorBtn.title = '🎯 Snap this line to current audio playback (1-click sync)';
+    anchorBtn.setAttribute('aria-label', 'Anchor line to playback');
+    anchorBtn.innerHTML = `
+      <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"></circle>
+        <circle cx="12" cy="12" r="3"></circle>
+      </svg>
+    `;
+    anchorBtn.addEventListener('click', (e) => {
+      e.stopPropagation(); // Avoid triggering line seek
+      calibrateSyncToLine(line.start);
+    });
+
+    const playIcon = document.createElement('div');
+    playIcon.className = 'lyric-play-icon';
+    playIcon.innerHTML = `
       <svg class="icon-sm" viewBox="0 0 24 24" fill="currentColor">
         <polygon points="5 3 19 12 5 21 5 3" />
       </svg>
     `;
+
+    actionEl.appendChild(anchorBtn);
+    actionEl.appendChild(playIcon);
 
     row.appendChild(timeEl);
     row.appendChild(contentEl);
@@ -647,8 +718,22 @@ function updateCounter() {
 /**
  * Switch Track
  */
-function switchTrack(trackId) {
+function switchTrack(trackId, pushHistory = true) {
   currentTrackId = trackId;
+
+  try {
+    localStorage.setItem('polilyrics_last_track', trackId);
+    const url = new URL(window.location.href);
+    if (url.searchParams.get('v') !== trackId) {
+      url.searchParams.set('v', trackId);
+      if (pushHistory) {
+        window.history.pushState({ trackId }, '', url.toString());
+      } else {
+        window.history.replaceState({ trackId }, '', url.toString());
+      }
+    }
+  } catch {}
+
   showPlayerView();
   loadSyncOffsetForTrack(trackId);
   updateTrackInfo();
@@ -1398,7 +1483,7 @@ function initYouTubeSearchAutocomplete() {
   const headerBrand = document.querySelector('.header-brand');
   if (headerBrand) {
     headerBrand.addEventListener('click', () => {
-      showLandingSearch();
+      returnToLandingSearch();
     });
   }
 }
@@ -1757,12 +1842,144 @@ function initEvents() {
     if (e.target === wordModal) closeWordDetails();
   });
 
-  // Sync Offset Controls Listeners
-  if (btnSyncSub05) btnSyncSub05.addEventListener('click', () => setSyncOffset(currentSyncOffset - 0.5));
-  if (btnSyncSub01) btnSyncSub01.addEventListener('click', () => setSyncOffset(currentSyncOffset - 0.1));
-  if (btnSyncAdd01) btnSyncAdd01.addEventListener('click', () => setSyncOffset(currentSyncOffset + 0.1));
-  if (btnSyncAdd05) btnSyncAdd05.addEventListener('click', () => setSyncOffset(currentSyncOffset + 0.5));
+  // Helper for hold-to-repeat with acceleration (prevents mobile zoom & allows fast scrubbing)
+  function setupHoldToRepeat(button, delta) {
+    if (!button) return;
+    let timer = null;
+    let interval = null;
+    let count = 0;
+
+    function executeStep() {
+      count++;
+      let step = delta;
+      if (count > 8) {
+        step = delta * 2;
+      }
+      if (count > 20) {
+        step = delta * 5;
+      }
+      setSyncOffset(currentSyncOffset + step);
+    }
+
+    function start(e) {
+      if (e.button !== undefined && e.button !== 0) return;
+      setSyncOffset(currentSyncOffset + delta);
+      count = 0;
+      timer = setTimeout(() => {
+        interval = setInterval(executeStep, 90);
+      }, 260);
+    }
+
+    function stop() {
+      clearTimeout(timer);
+      clearInterval(interval);
+      timer = null;
+      interval = null;
+    }
+
+    button.addEventListener('mousedown', start);
+    button.addEventListener('mouseup', stop);
+    button.addEventListener('mouseleave', stop);
+    button.addEventListener('touchstart', (e) => {
+      e.preventDefault(); // Stop iOS double-tap zoom
+      start(e);
+    }, { passive: false });
+    button.addEventListener('touchend', stop);
+    button.addEventListener('touchcancel', stop);
+  }
+
+  // Sync Offset Controls Listeners with Hold-to-Repeat Acceleration
+  setupHoldToRepeat(btnSyncSub05, -0.5);
+  setupHoldToRepeat(btnSyncSub01, -0.1);
+  setupHoldToRepeat(btnSyncAdd01, 0.1);
+  setupHoldToRepeat(btnSyncAdd05, 0.5);
   if (btnSyncReset) btnSyncReset.addEventListener('click', () => setSyncOffset(0.0));
+
+  // Sync Calibration Modal Dialog
+  function openSyncModal() {
+    if (syncModal) {
+      updateSyncModalUI();
+      syncModal.classList.remove('hidden');
+    }
+  }
+
+  function closeSyncModal() {
+    if (syncModal) {
+      syncModal.classList.add('hidden');
+    }
+  }
+
+  if (syncOffsetVal) syncOffsetVal.addEventListener('click', openSyncModal);
+  if (btnOpenSyncModal) btnOpenSyncModal.addEventListener('click', openSyncModal);
+  if (syncModalClose) syncModalClose.addEventListener('click', closeSyncModal);
+  if (syncModal) {
+    syncModal.addEventListener('click', (e) => {
+      if (e.target === syncModal) closeSyncModal();
+    });
+  }
+
+  // 1-Click Snap Button in Modal
+  if (btnSyncModalSnap) {
+    btnSyncModalSnap.addEventListener('click', () => {
+      const targetIndex = currentActiveIndex >= 0 ? currentActiveIndex : 0;
+      if (currentLyrics && currentLyrics[targetIndex]) {
+        calibrateSyncToLine(currentLyrics[targetIndex].start);
+      } else {
+        showToast('No lyrics loaded to anchor to');
+      }
+    });
+  }
+
+  // Offset Slider in Modal
+  if (syncModalSlider) {
+    syncModalSlider.addEventListener('input', (e) => {
+      const val = parseFloat(e.target.value);
+      if (!isNaN(val)) setSyncOffset(val);
+    });
+  }
+
+  // Coarse Preset Jump Buttons in Modal
+  document.querySelectorAll('.sync-step-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const step = btn.dataset.step;
+      if (step === 'reset') {
+        setSyncOffset(0.0);
+      } else {
+        const num = parseFloat(step);
+        if (!isNaN(num)) {
+          setSyncOffset(currentSyncOffset + num);
+        }
+      }
+    });
+  });
+
+  // Manual Direct Input in Modal
+  if (btnSyncModalApply && syncModalInput) {
+    btnSyncModalApply.addEventListener('click', () => {
+      const val = parseFloat(syncModalInput.value);
+      if (!isNaN(val)) {
+        setSyncOffset(val);
+        const sign = val >= 0 ? '+' : '';
+        showToast(`⏱️ Manual sync offset applied: ${sign}${val.toFixed(1)}s`);
+      }
+    });
+    syncModalInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        btnSyncModalApply.click();
+      }
+    });
+  }
+
+  // Browser Back / Forward History Navigation
+  window.addEventListener('popstate', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const trackId = urlParams.get('v') || urlParams.get('track');
+    if (trackId && getTrackMeta(trackId)) {
+      switchTrack(trackId, false);
+    } else {
+      showLandingSearch();
+    }
+  });
 
   // Volume Controls
   const btnVolume = document.getElementById('btn-volume');
@@ -1878,11 +2095,13 @@ function initEvents() {
       btnRepeatLine.click();
     } else if ((e.key === '[' || e.key === '-') && !e.metaKey && !e.ctrlKey) {
       e.preventDefault();
-      setSyncOffset(currentSyncOffset - 0.1);
+      const step = e.shiftKey ? 5.0 : 0.5;
+      setSyncOffset(currentSyncOffset - step);
       showToast(`⏱️ Sync: ${currentSyncOffset >= 0 ? '+' : ''}${currentSyncOffset.toFixed(1)}s`);
     } else if ((e.key === ']' || e.key === '+' || e.key === '=') && !e.metaKey && !e.ctrlKey) {
       e.preventDefault();
-      setSyncOffset(currentSyncOffset + 0.1);
+      const step = e.shiftKey ? 5.0 : 0.5;
+      setSyncOffset(currentSyncOffset + step);
       showToast(`⏱️ Sync: ${currentSyncOffset >= 0 ? '+' : ''}${currentSyncOffset.toFixed(1)}s`);
     } else if (e.key === '/' || (e.key === 'k' && (e.metaKey || e.ctrlKey))) {
       e.preventDefault();
@@ -1904,6 +2123,7 @@ function initEvents() {
         toggleLyricsFullscreen(false);
       }
       closeWordDetails();
+      closeSyncModal();
       if (ytResultsModal) ytResultsModal.classList.add('hidden');
       hideAllSuggestions();
     }

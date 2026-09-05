@@ -1155,6 +1155,43 @@ export function getSynchronizedLyrics(trackId, targetLang = 'en') {
 }
 
 /**
+ * Dynamic Tracks Persistence Key
+ */
+const DYNAMIC_TRACKS_KEY = 'polilyrics_dynamic_tracks';
+
+function loadPersistedDynamicTracks() {
+  try {
+    const raw = localStorage.getItem(DYNAMIC_TRACKS_KEY);
+    if (raw) {
+      const list = JSON.parse(raw);
+      if (Array.isArray(list)) {
+        list.forEach((t) => {
+          if (t && t.id) {
+            const idx = TRACKS.findIndex((existing) => existing.id === t.id);
+            if (idx >= 0) {
+              TRACKS[idx] = { ...TRACKS[idx], ...t };
+            } else {
+              TRACKS.push(t);
+            }
+          }
+        });
+      }
+    }
+  } catch {}
+}
+
+// Hydrate saved dynamic tracks on startup
+loadPersistedDynamicTracks();
+
+/**
+ * Checks if a track exists in dataset
+ * @param {string} trackId
+ */
+export function hasTrack(trackId) {
+  return TRACKS.some((t) => t.id === trackId);
+}
+
+/**
  * Gets track metadata
  * @param {string} trackId
  */
@@ -1165,14 +1202,28 @@ export function getTrackMeta(trackId) {
 /**
  * Registers a dynamically searched or custom imported track
  * @param {Object} track
+ * @param {boolean} persist
  */
-export function registerDynamicTrack(track) {
+export function registerDynamicTrack(track, persist = true) {
   if (!track || !track.id) return;
   const existingIdx = TRACKS.findIndex((t) => t.id === track.id);
   if (existingIdx >= 0) {
     TRACKS[existingIdx] = { ...TRACKS[existingIdx], ...track };
   } else {
     TRACKS.unshift(track); // Put newly added song at top
+  }
+
+  if (persist) {
+    try {
+      // Store up to 30 most recent dynamically added songs
+      const dynamicList = TRACKS.filter((t) => t.badge && (
+        t.badge.includes('LRCLIB') ||
+        t.badge.includes('YouTube') ||
+        t.badge.includes('Custom') ||
+        t.badge.includes('Verified')
+      ));
+      localStorage.setItem(DYNAMIC_TRACKS_KEY, JSON.stringify(dynamicList.slice(0, 30)));
+    } catch {}
   }
 }
 
