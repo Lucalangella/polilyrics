@@ -1206,6 +1206,7 @@ function setupAutocomplete({
   function hideDropdown() {
     dropdownEl.classList.add('hidden');
     dropdownEl.innerHTML = '';
+    dropdownEl.style.maxHeight = '';
     activeIdx = -1;
     suggestions = [];
   }
@@ -1333,6 +1334,12 @@ function setupAutocomplete({
       });
     }
 
+    const inputRect = inputEl.getBoundingClientRect();
+    const availableHeight = window.innerHeight - inputRect.bottom - 24;
+    if (availableHeight > 100) {
+      dropdownEl.style.maxHeight = `${Math.min(340, availableHeight)}px`;
+    }
+
     dropdownEl.classList.remove('hidden');
   }
 
@@ -1450,6 +1457,16 @@ function setupAutocomplete({
   document.addEventListener('click', (e) => {
     if (formEl && !formEl.contains(e.target) && !dropdownEl.contains(e.target)) {
       hideDropdown();
+    }
+  });
+
+  window.addEventListener('resize', () => {
+    if (!dropdownEl.classList.contains('hidden')) {
+      const inputRect = inputEl.getBoundingClientRect();
+      const availableHeight = window.innerHeight - inputRect.bottom - 24;
+      if (availableHeight > 100) {
+        dropdownEl.style.maxHeight = `${Math.min(340, availableHeight)}px`;
+      }
     }
   });
 }
