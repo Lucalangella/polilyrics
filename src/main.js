@@ -477,6 +477,43 @@ function updateTrackInfo() {
   songArtistEl.textContent = `${meta.artist} • [${meta.id}]`;
 }
 
+let currentLyricsLoadId = 0;
+
+/**
+ * Immediately clears old track lyrics and displays a clean loading state in the lyrics panel
+ * so users never see the previous song's lyrics while waiting for a new track.
+ */
+function showLyricsLoading(trackTitle = '', subtitle = '') {
+  currentLyrics = [];
+  currentActiveIndex = -1;
+  if (activeLinePill) activeLinePill.classList.add('hidden');
+  if (lineCounter) lineCounter.textContent = '- / -';
+  const progressFill = document.getElementById('bottom-progress-fill');
+  if (progressFill) progressFill.style.width = '0%';
+
+  if (lyricsList) {
+    const escapedTitle = trackTitle ? escapeHtml(trackTitle) : '';
+    lyricsList.innerHTML = `
+      <div class="lyrics-loading-state" role="status" aria-live="polite">
+        <div class="spinner"></div>
+        <p class="lyrics-loading-title">Loading lyrics${escapedTitle ? ` for <span class="lyrics-loading-title-song">"${escapedTitle}"</span>` : ''}...</p>
+        <p class="lyrics-loading-sub">${subtitle ? escapeHtml(subtitle) : 'Fetching synchronized lines & translation...'}</p>
+      </div>
+    `;
+  }
+  if (lyricsContainer) {
+    lyricsContainer.scrollTo({ top: 0, behavior: 'instant' });
+  }
+}
+
+function updateLyricsLoadingProgress(message) {
+  if (!lyricsList) return;
+  const sub = lyricsList.querySelector('.lyrics-loading-sub');
+  if (sub) {
+    sub.textContent = message;
+  }
+}
+
 /**
  * Load and Render Synchronized Lyrics
  * Returns and stores an array of { start, end, original, translated }
@@ -497,6 +534,16 @@ function reloadLyrics() {
  */
 function renderLyrics(lyrics) {
   lyricsList.innerHTML = '';
+
+  if (!lyrics || lyrics.length === 0) {
+    lyricsList.innerHTML = `
+      <div class="lyrics-empty-state">
+        <p class="lyrics-empty-title">No synchronized lyrics available for this track.</p>
+        <p class="lyrics-empty-sub">Audio playback continues. Try searching another version with synchronized LRC lines.</p>
+      </div>
+    `;
+    return;
+  }
 
   lyrics.forEach((line, index) => {
     const row = document.createElement('div');
@@ -678,8 +725,13 @@ function setActiveLyric(index, forcedByUser = false) {
 }
 
 function updateCounter() {
+  if (!lineCounter) return;
+  const total = currentLyrics ? currentLyrics.length : 0;
+  if (total === 0) {
+    lineCounter.textContent = '- / -';
+    return;
+  }
   const current = currentActiveIndex >= 0 ? currentActiveIndex + 1 : 0;
-  const total = currentLyrics.length;
   lineCounter.textContent = `${current} / ${total}`;
 }
 
@@ -781,9 +833,17 @@ async function executeUniversalSearch(query) {
  * Loads a song selected from LRCLIB search results
  */
 async function loadSongFromSearchResult(item) {
+  const loadId = ++currentLyricsLoadId;
   const trackName = item.trackName || item.name || 'Unknown Track';
   const artistName = item.artistName || 'Unknown Artist';
   const targetLang = languageRouter.getCurrentLanguage();
+
+  if (playerController) playerController.pause();
+  showPlayerView();
+  showLyricsLoading(trackName, `Resolving video & lyrics for "${artistName} - ${trackName}"...`);
+  if (songTitleEl) songTitleEl.textContent = trackName;
+  if (songArtistEl) songArtistEl.textContent = artistName;
+  if (searchModal) searchModal.classList.add('hidden');
 
   searchStatusBar.innerHTML = `<span>⏳ Parsing lyrics & resolving video for "${escapeHtml(trackName)}"...</span>`;
 
@@ -810,6 +870,8 @@ async function loadSongFromSearchResult(item) {
     resolvedYtId = await searchYouTubeVideoId(`${artistName} ${trackName}`);
   }
 
+  if (loadId !== currentLyricsLoadId) return;
+
   if (!resolvedYtId) {
     resolvedYtId = currentTrackId;
   }
@@ -830,15 +892,22 @@ async function loadSongFromSearchResult(item) {
   }
 
   // 3. Dynamic Translation
-  searchStatusBar.innerHTML = `<span>⏳ Translating ${rawLines.length} lines into ${targetLang.toUpperCase()}...</span>`;
+  const transIntro = `Translating ${rawLines.length} lines into ${targetLang.toUpperCase()}...`;
+  searchStatusBar.innerHTML = `<span>⏳ ${transIntro}</span>`;
+  updateLyricsLoadingProgress(transIntro);
 
   const translatedLines = await translationService.translateLines(
     rawLines,
     targetLang,
     (done, total) => {
-      searchStatusBar.innerHTML = `<span>⏳ Translating lyrics: ${done} / ${total} lines...</span>`;
+      if (loadId !== currentLyricsLoadId) return;
+      const progressMsg = `Translating lyrics: ${done} / ${total} lines...`;
+      searchStatusBar.innerHTML = `<span>⏳ ${progressMsg}</span>`;
+      updateLyricsLoadingProgress(progressMsg);
     }
   );
+
+  if (loadId !== currentLyricsLoadId) return;
 
   // Format into track structure
   const formattedLyrics = translatedLines.map((l) => ({
@@ -864,7 +933,6 @@ async function loadSongFromSearchResult(item) {
   };
 
   addAndSelectTrack(dynamicTrack);
-  searchModal.classList.add('hidden');
   playerController.play();
 }
 
@@ -882,17 +950,35 @@ async function handleDirectYouTubeLoad() {
 
   const titleQuery = directYtTitle.value.trim();
   const targetLang = languageRouter.getCurrentLanguage();
+  const loadId = ++currentLyricsLoadId;
+
+  if (playerController) playerController.pause();
+  showPlayerView();
+  showLyricsLoading(titleQuery || `YouTube Video [${ytId}]`, 'Loading video & synchronizing lyrics...');
+  if (searchModal) searchModal.classList.add('hidden');
 
   if (titleQuery) {
     searchStatusBar.innerHTML = `<span>⏳ Fetching lyrics for "${escapeHtml(titleQuery)}"...</span>`;
     const results = await searchLrclib(titleQuery);
+    if (loadId !== currentLyricsLoadId) return;
     if (results && results.length > 0) {
       const bestMatch = results[0];
       let rawLines = bestMatch.syncedLyrics
         ? parseLrc(bestMatch.syncedLyrics, bestMatch.duration || 210)
         : parsePlainTextToCadence(bestMatch.plainLyrics, bestMatch.duration || 210);
 
-      const translatedLines = await translationService.translateLines(rawLines, targetLang);
+      updateLyricsLoadingProgress(`Translating lyrics into ${targetLang.toUpperCase()}...`);
+      const translatedLines = await translationService.translateLines(
+        rawLines,
+        targetLang,
+        (done, total) => {
+          if (loadId !== currentLyricsLoadId) return;
+          const progressMsg = `Translating lyrics: ${done} / ${total} lines...`;
+          updateLyricsLoadingProgress(progressMsg);
+        }
+      );
+      if (loadId !== currentLyricsLoadId) return;
+
       const formattedLyrics = translatedLines.map((l) => ({
         start: l.start,
         end: l.end,
@@ -914,13 +1000,13 @@ async function handleDirectYouTubeLoad() {
       };
 
       addAndSelectTrack(dynamicTrack);
-      searchModal.classList.add('hidden');
       playerController.play();
       return;
     }
   }
 
   // Fallback direct load
+  if (loadId !== currentLyricsLoadId) return;
   const directTrack = {
     id: ytId,
     title: titleQuery || `YouTube Video [${ytId}]`,
@@ -942,7 +1028,6 @@ async function handleDirectYouTubeLoad() {
   };
 
   addAndSelectTrack(directTrack);
-  searchModal.classList.add('hidden');
   playerController.play();
 }
 
@@ -1559,7 +1644,10 @@ async function showYouTubeSearchResultsModal(query) {
  * Loads a selected YouTube video into player and syncs bilingual lyrics
  */
 async function playSelectedVideoWithLyrics(video, prefetchedLrc = null) {
+  const loadId = ++currentLyricsLoadId;
+  if (playerController) playerController.pause();
   showPlayerView();
+  showLyricsLoading(video.title, 'Fetching synchronized lines & translation...');
   if (songTitleEl) songTitleEl.textContent = video.title;
   if (songArtistEl) songArtistEl.textContent = `${video.channel} • [${video.videoId}]`;
   if (ytResultsModal) ytResultsModal.classList.add('hidden');
@@ -1589,10 +1677,13 @@ async function playSelectedVideoWithLyrics(video, prefetchedLrc = null) {
       lrcItem = await getLrclibExact(parsed.title, parsed.artist);
     }
 
+    if (loadId !== currentLyricsLoadId) return;
+
     // 2. Try search with parsed artist & title
     if (!lrcItem && parsed.title) {
       const searchTerms = parsed.artist ? `${parsed.artist} ${parsed.title}` : parsed.title;
       const results = await searchLrclib(searchTerms);
+      if (loadId !== currentLyricsLoadId) return;
       if (results && results.length > 0) {
         lrcItem = pickBestLrcResult(results, videoSec, parsed.title, parsed.artist);
       }
@@ -1602,16 +1693,20 @@ async function playSelectedVideoWithLyrics(video, prefetchedLrc = null) {
     if (!lrcItem) {
       const cleanTitle = video.title.replace(/\(.*?\)|\[.*?\]/g, '').replace(/official\s*(music)?\s*(video|audio)/gi, '').trim();
       const results = await searchLrclib(`${video.channel} ${cleanTitle}`);
+      if (loadId !== currentLyricsLoadId) return;
       if (results && results.length > 0) {
         lrcItem = pickBestLrcResult(results, videoSec, parsed.title, parsed.artist);
       } else {
         const fallbackResults = await searchLrclib(cleanTitle);
+        if (loadId !== currentLyricsLoadId) return;
         if (fallbackResults && fallbackResults.length > 0) {
           lrcItem = pickBestLrcResult(fallbackResults, videoSec, parsed.title, parsed.artist);
         }
       }
     }
   }
+
+  if (loadId !== currentLyricsLoadId) return;
 
   let rawLines = [];
   if (lrcItem && lrcItem.syncedLyrics) {
@@ -1625,8 +1720,23 @@ async function playSelectedVideoWithLyrics(video, prefetchedLrc = null) {
     ];
   }
 
-  if (overlayText) overlayText.textContent = `Translating lyrics to ${targetLang.toUpperCase()}...`;
-  const translated = await translationService.translateLines(rawLines, targetLang);
+  const transStartMsg = `Translating lyrics to ${targetLang.toUpperCase()}...`;
+  if (overlayText) overlayText.textContent = transStartMsg;
+  updateLyricsLoadingProgress(transStartMsg);
+
+  const translated = await translationService.translateLines(
+    rawLines,
+    targetLang,
+    (done, total) => {
+      if (loadId !== currentLyricsLoadId) return;
+      const progressMsg = `Translating lyrics: ${done} / ${total} lines...`;
+      if (overlayText) overlayText.textContent = progressMsg;
+      updateLyricsLoadingProgress(progressMsg);
+    }
+  );
+
+  if (loadId !== currentLyricsLoadId) return;
+
   const formattedLyrics = translated.map((l) => ({
     start: l.start,
     end: l.end,
@@ -2286,4 +2396,9 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initApp);
 } else {
   initApp();
+}
+
+if (typeof window !== 'undefined') {
+  window.playSelectedVideoWithLyrics = playSelectedVideoWithLyrics;
+  window.showLyricsLoading = showLyricsLoading;
 }
