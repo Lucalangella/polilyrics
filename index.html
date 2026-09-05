@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#08080a" />
+  <meta name="description" content="Learn languages through music with interactive dual-subtitle lyrics synchronized with YouTube." />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <title>Lyricist | Bilingual Lyric Player</title>
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <div id="app" class="app-layout landing-mode">
+    <!-- Header Bar -->
+    <header class="app-header">
+      <div class="header-brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 18V5l12-2v13" />
+            <circle cx="6" cy="18" r="3" />
+            <circle cx="18" cy="16" r="3" />
+          </svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-title">Lyricist</span>
+          <span class="brand-subtitle">Dual-Subtitle Player</span>
+        </div>
+      </div>
+
+      <!-- YouTube Style Search Bar with Real-Time Autocomplete Suggestions -->
+      <div class="yt-search-container" id="yt-search-container">
+        <form class="yt-search-form" id="yt-search-form" role="search" onsubmit="return false;">
+          <div class="yt-search-box">
+            <div class="yt-search-input-prefix">
+              <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+            </div>
+            <input
+              type="text"
+              id="yt-search-input"
+              class="yt-search-input"
+              placeholder="Search any song, artist, or YouTube URL..."
+              autocomplete="off"
+              spellcheck="false"
+              aria-autocomplete="list"
+              aria-controls="yt-suggestions-dropdown"
+              aria-label="Search songs and lyrics"
+            />
+            <button type="button" id="yt-search-clear" class="yt-search-clear hidden" aria-label="Clear search query" title="Clear">
+              &times;
+            </button>
+          </div>
+          <button type="submit" id="yt-search-submit" class="yt-search-btn" title="Search" aria-label="Submit search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+          </button>
+        </form>
+
+        <!-- Floating YouTube Autocomplete Dropdown -->
+        <div id="yt-suggestions-dropdown" class="yt-suggestions-dropdown hidden" role="listbox" aria-label="Search suggestions">
+          <!-- Populated in real-time as user types -->
+        </div>
+      </div>
+
+      <div class="header-controls">
+        <!-- Language Target Switcher -->
+        <div class="control-group language-selector-wrapper">
+          <label for="language-select" class="control-label" title="Translation Target Language">
+            <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="2" y1="12" x2="22" y2="12" />
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+            </svg>
+            <span class="lang-label-text">Translate:</span>
+          </label>
+          <select id="language-select" class="select-input" aria-label="Select target language">
+            <!-- Populated dynamically with detected default -->
+          </select>
+          <span id="detected-badge" class="detected-badge" title="Auto-detected from your browser">AUTO</span>
+        </div>
+
+        <!-- Install PWA Button (hidden until prompt available) -->
+        <button id="pwa-install-btn" class="btn btn-secondary btn-sm pwa-btn hidden" title="Install App">
+          <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
+          </svg>
+          <span>Install</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Hero Search Landing State (Default initial view instead of preloaded video) -->
+    <section id="hero-search-landing" class="hero-search-landing" aria-label="Search and Explore Music">
+      <div class="hero-content">
+        <div class="hero-badge">
+          <span class="hero-badge-dot"></span>
+          <span>DUAL-SUBTITLE MUSIC PLAYER</span>
+        </div>
+        <h1 class="hero-title">Learn languages through music.</h1>
+        <p class="hero-subtitle">
+          Search any song, artist, or YouTube video to practice listening with real-time synchronized bilingual lyrics.
+        </p>
+
+        <!-- Big Prominent Search Input -->
+        <div class="hero-search-box-wrapper" id="hero-search-wrapper">
+          <form id="hero-search-form" class="hero-search-form" role="search" onsubmit="return false;">
+            <svg class="hero-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input
+              type="text"
+              id="hero-search-input"
+              class="hero-search-input"
+              placeholder="Search any song, artist, or YouTube URL..."
+              autocomplete="off"
+              spellcheck="false"
+              autofocus
+            />
+            <button type="button" id="hero-search-clear" class="hero-search-clear hidden" aria-label="Clear search">×</button>
+            <button type="submit" class="hero-search-submit btn btn-primary">
+              <span>Search</span>
+              <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+              </svg>
+            </button>
+          </form>
+
+          <!-- Floating Autocomplete Dropdown for Hero Search -->
+          <div id="hero-suggestions-dropdown" class="yt-suggestions-dropdown hero-suggestions-dropdown hidden" role="listbox">
+            <!-- Populated dynamically as user types -->
+          </div>
+        </div>
+
+        <!-- Quick Trending Discovery Pills -->
+        <div class="hero-trending">
+          <span class="trending-label">Trending tracks:</span>
+          <div class="trending-pills">
+            <button class="trending-pill" data-query="Stromae Papaoutai">Stromae - Papaoutai</button>
+            <button class="trending-pill" data-query="Tame Impala The Less I Know The Better">Tame Impala - The Less I Know The Better</button>
+            <button class="trending-pill" data-query="Coldplay Yellow">Coldplay - Yellow</button>
+            <button class="trending-pill" data-query="Billie Eilish Birds of a Feather">Billie Eilish - Birds of a Feather</button>
+            <button class="trending-pill" data-query="Videoclub Amour Plastique">Videoclub - Amour Plastique</button>
+            <button class="trending-pill" data-query="Indila Dernière Danse">Indila - Dernière Danse</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Responsive Grid / Stack Container (Displayed when a song is chosen) -->
+    <main id="main-container" class="main-container hidden mode-split">
+      <div class="main-layout-body">
+        <!-- Video Pane (Left in Split View) -->
+        <section class="video-pane" id="video-pane" aria-label="Video Player Section">
+          <div class="video-card">
+            <div class="video-aspect-wrapper">
+              <div id="youtube-player" class="youtube-iframe-target"></div>
+              <div id="player-overlay" class="player-loading-overlay">
+                <div class="spinner"></div>
+                <p class="overlay-text">Loading YouTube Player...</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Lyrics Pane (Right in Split View) -->
+        <section class="lyrics-pane" id="lyrics-pane" aria-label="Synchronized Lyrics Feed">
+          <!-- Lyrics Toolbar -->
+          <div class="lyrics-toolbar">
+            <div class="toolbar-left">
+              <div class="search-box">
+                <svg class="icon-sm search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                <input type="text" id="lyrics-search" placeholder="Search lyrics..." aria-label="Search lyrics" />
+                <button id="search-clear" class="search-clear-btn hidden" aria-label="Clear search">×</button>
+              </div>
+              <span id="line-counter" class="line-counter">0 / 0</span>
+            </div>
+
+            <div class="toolbar-right">
+              <!-- Auto-scroll Toggle -->
+              <button id="btn-autoscroll" class="btn btn-ghost btn-sm toggle-btn active" title="Toggle Auto-Scroll">
+                <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 5v14" />
+                  <path d="m19 12-7 7-7-7" />
+                </svg>
+                <span class="autoscroll-text">Auto-Scroll</span>
+              </button>
+
+              <!-- Text Size Switcher -->
+              <div class="text-size-controls" title="Adjust text size">
+                <button id="btn-font-dec" class="btn btn-ghost btn-xs" aria-label="Decrease text size">A-</button>
+                <button id="btn-font-inc" class="btn btn-ghost btn-xs" aria-label="Increase text size">A+</button>
+              </div>
+
+              <!-- Expand Lyrics Full Screen Button -->
+              <button id="btn-expand-lyrics" class="btn btn-ghost btn-sm expand-lyrics-btn" title="Expand lyrics to full screen [F]" aria-label="Expand lyrics to full screen">
+                <svg class="icon-sm icon-expand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
+                </svg>
+                <svg class="icon-sm icon-collapse hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7" />
+                </svg>
+                <span class="expand-btn-text">Full Screen</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Scrollable Lyrics Container -->
+          <div id="lyrics-scroll-container" class="lyrics-scroll-container" tabindex="0" role="region" aria-label="Scrollable Bilingual Lyrics">
+            <div id="lyrics-list" class="lyrics-list">
+              <!-- Lyrics rendered dynamically -->
+            </div>
+          </div>
+
+          <!-- Footer helper info -->
+          <div class="lyrics-footer">
+            <span class="help-hint">Tap any line to seek &bull; Click any word for vocabulary</span>
+          </div>
+        </section>
+      </div>
+
+      <!-- Persistent Bottom Player Bar: ALWAYS AT THE BOTTOM, ALWAYS VISIBLE! -->
+      <footer id="bottom-player-bar" class="bottom-player-bar" role="region" aria-label="Playback Controls and Settings">
+        <!-- Interactive Seek / Progress Scrubber -->
+        <div class="bottom-player-progress-track" id="bottom-progress-track" title="Click to seek track">
+          <div class="bottom-player-progress-fill" id="bottom-progress-fill"></div>
+        </div>
+
+        <div class="bottom-player-content">
+          <!-- Left: Track Metadata -->
+          <div class="bottom-bar-left">
+            <div class="track-disc-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+            </div>
+            <div class="song-info">
+              <h2 id="song-title" class="song-title">Sample Track</h2>
+              <p id="song-artist" class="song-artist">Video ID: f-r2L0qO7yM</p>
+            </div>
+          </div>
+
+          <!-- Center: Transport Playback Controls -->
+          <div class="bottom-bar-center">
+            <div class="playback-controls">
+              <!-- Previous Line Button -->
+              <button id="btn-prev-line" class="btn btn-icon btn-ghost" title="Previous line (Left Arrow)" aria-label="Previous Lyric Line">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="19 20 9 12 19 4 19 20" />
+                  <line x1="5" y1="19" x2="5" y2="5" />
+                </svg>
+              </button>
+
+              <!-- Play / Pause Button -->
+              <button id="btn-play-pause" class="btn btn-icon btn-primary" title="Play/Pause (Space)" aria-label="Play or Pause">
+                <svg id="icon-play" class="icon" viewBox="0 0 24 24" fill="currentColor">
+                  <polygon points="5 3 19 12 5 21 5 3" />
+                </svg>
+                <svg id="icon-pause" class="icon hidden" viewBox="0 0 24 24" fill="currentColor">
+                  <rect x="6" y="4" width="4" height="16" />
+                  <rect x="14" y="4" width="4" height="16" />
+                </svg>
+              </button>
+
+              <!-- Repeat Current Line Button (A-B Loop) -->
+              <button id="btn-repeat-line" class="btn btn-icon btn-ghost" title="Replay current line (R)" aria-label="Replay current line">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 2l4 4-4 4" />
+                  <path d="M3 11v-1a4 4 0 0 1 4-4h14" />
+                  <path d="M7 22l-4-4 4-4" />
+                  <path d="M21 13v1a4 4 0 0 1-4 4H3" />
+                </svg>
+              </button>
+
+              <!-- Next Line Button -->
+              <button id="btn-next-line" class="btn btn-icon btn-ghost" title="Next line (Right Arrow)" aria-label="Next Lyric Line">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="5 4 15 12 5 20 5 4" />
+                  <line x1="19" y1="5" x2="19" y2="19" />
+                </svg>
+              </button>
+
+              <!-- Playback Speed -->
+              <div class="speed-selector">
+                <button id="btn-speed" class="btn btn-ghost btn-sm" title="Playback Speed">1.0x</button>
+              </div>
+
+              <!-- Time display -->
+              <div class="time-display">
+                <span id="current-time-txt">0:00</span>
+                <span class="time-divider">/</span>
+                <span id="duration-time-txt">0:00</span>
+              </div>
+
+              <!-- Volume Control -->
+              <div class="volume-control" id="volume-control" title="Adjust Volume (M to mute)">
+                <button id="btn-volume" class="volume-btn" title="Mute/Unmute (M)" aria-label="Mute or Unmute">
+                  <svg id="icon-vol-high" class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                  </svg>
+                  <svg id="icon-vol-low" class="icon-sm hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                    <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                  </svg>
+                  <svg id="icon-vol-muted" class="icon-sm hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                    <line x1="23" y1="9" x2="17" y2="15"></line>
+                    <line x1="17" y1="9" x2="23" y2="15"></line>
+                  </svg>
+                </button>
+                <div class="volume-slider-wrapper">
+                  <input type="range" id="volume-slider" class="volume-slider" min="0" max="100" value="100" step="1" aria-label="Volume slider" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Sync Calibration Controls -->
+          <div class="bottom-bar-right">
+            <div class="sync-offset-bar" id="sync-offset-bar" title="Fine-tune lyric synchronization with music">
+              <div class="sync-label-group">
+                <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 6 12 12 16 14" />
+                </svg>
+                <span class="sync-label">Sync Offset:</span>
+              </div>
+              <div class="sync-buttons-group">
+                <button id="btn-sync-sub-05" class="btn btn-ghost btn-xs sync-btn" title="Lyrics appearing early? Delay lyrics -0.5s">-0.5s</button>
+                <button id="btn-sync-sub-01" class="btn btn-ghost btn-xs sync-btn" title="Nudge lyrics -0.1s">-0.1s</button>
+                <span id="sync-offset-val" class="sync-value">0.0s</span>
+                <button id="btn-sync-add-01" class="btn btn-ghost btn-xs sync-btn" title="Nudge lyrics +0.1s">+0.1s</button>
+                <button id="btn-sync-add-05" class="btn btn-ghost btn-xs sync-btn" title="Lyrics appearing late? Advance lyrics +0.5s">+0.5s</button>
+                <button id="btn-sync-reset" class="btn btn-ghost btn-xs sync-reset-btn" title="Reset offset to 0.0s">↺ Reset</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </main>
+
+    <!-- Word Details Modal / Tooltip Popover -->
+    <div id="word-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 id="modal-word-title" class="modal-word">Word</h3>
+          <button id="modal-close-btn" class="modal-close" aria-label="Close modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p id="modal-word-meaning" class="modal-meaning">Meaning...</p>
+          <div class="modal-actions">
+            <button id="modal-pronounce-btn" class="btn btn-secondary btn-sm">
+              <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+              </svg>
+              Pronounce
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- YouTube Video Search Results Selection Modal -->
+    <div id="yt-results-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+      <div class="modal-card modal-card-wide yt-results-modal-card">
+        <div class="modal-header">
+          <div class="modal-title-group">
+            <svg class="icon text-danger" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+            </svg>
+            <div>
+              <h3 id="yt-results-title">YouTube Videos</h3>
+              <p id="yt-results-subtitle" class="modal-subtitle">Choose a video to start learning with dual subtitles</p>
+            </div>
+          </div>
+          <button id="yt-results-close" class="modal-close" aria-label="Close">&times;</button>
+        </div>
+
+        <div class="modal-body yt-results-modal-body">
+          <div id="yt-results-loading" class="yt-results-loading hidden">
+            <div class="spinner"></div>
+            <span>Finding matching YouTube videos & synced lyrics...</span>
+          </div>
+
+          <div id="yt-results-list" class="yt-results-grid">
+            <!-- Dynamically populated YouTube video cards -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
