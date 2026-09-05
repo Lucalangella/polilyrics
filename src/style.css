@@ -1204,8 +1204,10 @@ button,
 .main-container.lyrics-fullscreen .main-layout-body {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding: 0.75rem 1.5rem 0.5rem;
+  align-items: stretch;
+  padding: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
 }
 
 .main-container.lyrics-fullscreen .video-pane {
@@ -1224,12 +1226,12 @@ button,
 .main-container.lyrics-fullscreen .lyrics-pane {
   flex: 1 1 100% !important;
   width: 100% !important;
-  max-width: 900px !important;
-  margin: 0 auto;
-  border: 1px solid var(--border-subtle) !important;
-  border-radius: var(--radius-lg);
+  max-width: 100% !important;
+  margin: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
   background: var(--bg-surface);
-  box-shadow: var(--shadow-card);
+  box-shadow: none !important;
 }
 
 .main-container.lyrics-fullscreen .lyric-row {
@@ -2103,14 +2105,14 @@ button,
   color: var(--text-primary);
 }
 
-/* Scrollable Lyrics Container: Edge-to-edge with zero outer padding or empty space */
+/* Scrollable Lyrics Container: Flush to screen edges with comfortable internal card padding */
 .lyrics-scroll-container {
   position: relative;
   flex: 1;
   min-height: 0;
   overflow-y: auto;
   scroll-behavior: smooth;
-  padding: 0;
+  padding: 1.5rem 1.75rem 3.5rem;
   -webkit-mask-image: none;
   mask-image: none;
 }
@@ -2118,10 +2120,10 @@ button,
 .lyrics-list {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.75rem;
+  max-width: 760px;
   width: 100%;
-  max-width: 100%;
-  margin: 0;
+  margin: 0 auto;
   padding: 0;
 }
 
@@ -2955,7 +2957,7 @@ button,
     min-height: 0 !important;
     height: auto !important;
     overflow-y: auto !important;
-    padding: 0 !important;
+    padding: 0.85rem 0.85rem 3rem !important;
     -webkit-mask-image: none !important;
     mask-image: none !important;
   }
@@ -2965,7 +2967,7 @@ button,
     max-width: 100%;
     display: flex;
     flex-direction: column;
-    gap: 0.4rem;
+    gap: 0.5rem;
     padding: 0;
     margin: 0;
   }
@@ -3007,77 +3009,86 @@ button,
     min-height: auto;
   }
 
-  /* Row 1: Track meta across top */
+  /* Row 1: Left has Song Info (Title & Singer), Right has Scrub Timing button */
   .bottom-bar-left {
-    width: 100%;
-    flex: 0 0 100% !important;
+    width: auto !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
     height: auto !important;
-    order: 1;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem;
+    order: 1 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 0.5rem !important;
   }
 
   .song-info {
-    min-width: 0;
-    flex: 1;
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+    overflow: hidden !important;
   }
 
   .song-title {
-    font-size: 0.82rem;
-    font-weight: 600;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    color: var(--text-primary);
+    font-size: 0.84rem !important;
+    font-weight: 600 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    color: var(--text-primary) !important;
+    line-height: 1.25 !important;
   }
 
   .song-artist {
-    font-size: 0.7rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    color: var(--text-tertiary);
+    font-size: 0.72rem !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    color: var(--text-tertiary) !important;
+    line-height: 1.2 !important;
   }
 
   .track-disc-icon {
-    display: none;
+    display: none !important;
   }
 
-  /* Row 2: Transport playback controls on the left */
-  .bottom-bar-center {
-    width: auto;
+  /* Row 1: Scrub Timing on the right side next to title & singer */
+  .bottom-bar-right {
+    display: flex !important;
+    width: auto !important;
     flex: 0 0 auto !important;
-    order: 2;
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
+    order: 2 !important;
+    margin-left: auto !important;
+    justify-content: flex-end !important;
+    align-items: center !important;
+    border-top: none !important;
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+    position: relative !important;
+  }
+
+  /* Row 2: Centered Transport Playback Controls (Previous, Play/Pause, Next) */
+  .bottom-bar-center {
+    width: 100% !important;
+    flex: 0 0 100% !important;
+    order: 3 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin-top: 0.35rem !important;
+    margin-bottom: 0.15rem !important;
   }
 
   .bottom-bar-center .playback-controls {
-    width: auto;
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
+    width: auto !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 1.5rem !important;
+    margin: 0 auto !important;
   }
 
   .volume-control {
     display: none !important;
-  }
-
-  /* Row 2: Scrub Timing only (Right side) - Decluttered Mobile UX */
-  .bottom-bar-right {
-    display: flex !important;
-    width: auto;
-    flex: 0 0 auto !important;
-    order: 3;
-    margin-left: auto;
-    justify-content: flex-end;
-    border-top: none !important;
-    padding-top: 0 !important;
-    margin-top: 0 !important;
-    position: relative;
   }
 
   .bottom-bar-right .sync-offset-bar {
@@ -3361,7 +3372,7 @@ button,
   }
 
   .lyrics-scroll-container {
-    padding: 0 !important;
+    padding: 0.75rem 0.65rem 2.5rem !important;
     -webkit-mask-image: none !important;
     mask-image: none !important;
   }
