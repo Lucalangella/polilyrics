@@ -2888,28 +2888,42 @@ button,
   .video-pane {
     position: relative;
     width: 100% !important;
-    max-width: 100%;
+    max-width: 100% !important;
     height: auto !important;
     padding: 0 !important;
     border: none !important;
-    background: transparent !important;
+    background: #000000 !important;
     flex: 0 0 auto !important;
     z-index: 20;
     overflow: hidden;
   }
 
   .video-card {
-    width: 100%;
-    height: auto;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
     gap: 0;
   }
 
   .video-aspect-wrapper {
-    width: 100%;
-    aspect-ratio: 16 / 9;
-    max-height: 32vh;
-    height: auto;
-    padding-top: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    aspect-ratio: 16 / 9 !important;
+    height: auto !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    border-bottom: 1px solid var(--border-subtle) !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    background: #000000 !important;
   }
 
   /* Lyrics between video and bottom commands: flush edge-to-edge */
@@ -2999,83 +3013,100 @@ button,
   }
 
   .bottom-player-content {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.35rem 0.5rem;
-    padding: 0.35rem 0.75rem max(0.45rem, env(safe-area-inset-bottom));
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    grid-template-rows: auto auto !important;
+    align-items: center !important;
+    gap: 0.2rem 0.5rem !important;
+    padding: 0.3rem 0.75rem max(0.35rem, env(safe-area-inset-bottom)) !important;
     min-height: auto;
   }
 
-  /* Row 1: Left has Song Info (Title & Singer), Right has Scrub Timing button */
+  /* Row 1, Col 1: Song Info (Title & Singer on ONE single horizontal line) */
   .bottom-bar-left {
+    grid-column: 1 / 2 !important;
+    grid-row: 1 / 2 !important;
     width: auto !important;
-    flex: 1 1 auto !important;
     min-width: 0 !important;
+    max-width: 100% !important;
     height: auto !important;
-    order: 1 !important;
     display: flex !important;
     align-items: center !important;
     justify-content: flex-start !important;
-    gap: 0.5rem !important;
-  }
-
-  .song-info {
-    min-width: 0 !important;
-    flex: 1 1 auto !important;
+    gap: 0.35rem !important;
     overflow: hidden !important;
   }
 
+  .song-info {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: baseline !important;
+    gap: 0.3rem !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    overflow: hidden !important;
+    white-space: nowrap !important;
+  }
+
   .song-title {
-    font-size: 0.84rem !important;
+    font-size: 0.82rem !important;
     font-weight: 600 !important;
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
     color: var(--text-primary) !important;
     line-height: 1.25 !important;
+    flex-shrink: 1 !important;
+    margin: 0 !important;
   }
 
   .song-artist {
-    font-size: 0.72rem !important;
+    font-size: 0.74rem !important;
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
     color: var(--text-tertiary) !important;
     line-height: 1.2 !important;
+    flex-shrink: 2 !important;
+    margin: 0 !important;
+  }
+
+  .song-artist::before {
+    content: "•";
+    margin-right: 0.3rem;
+    color: var(--text-muted);
+    font-weight: 400;
   }
 
   .track-disc-icon {
     display: none !important;
   }
 
-  /* Row 1: Scrub Timing on the right side next to title & singer */
+  /* Row 1, Col 2: Scrub Timing on the EXACT SAME line, aligned to the right */
   .bottom-bar-right {
+    grid-column: 2 / 3 !important;
+    grid-row: 1 / 2 !important;
     display: flex !important;
     width: auto !important;
-    flex: 0 0 auto !important;
-    order: 2 !important;
-    margin-left: auto !important;
-    justify-content: flex-end !important;
     align-items: center !important;
+    justify-content: flex-end !important;
+    white-space: nowrap !important;
     border-top: none !important;
     padding-top: 0 !important;
-    margin-top: 0 !important;
+    margin: 0 !important;
     position: relative !important;
   }
 
   /* Row 2: Centered Transport Playback Controls (Previous, Play/Pause, Next) */
   .bottom-bar-center {
+    grid-column: 1 / 3 !important;
+    grid-row: 2 / 3 !important;
     width: 100% !important;
-    flex: 0 0 100% !important;
-    order: 3 !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    margin-top: 0.35rem !important;
-    margin-bottom: 0.15rem !important;
+    margin-top: 0.15rem !important;
+    margin-bottom: 0.05rem !important;
   }
 
   .bottom-bar-center .playback-controls {
@@ -3351,10 +3382,7 @@ button,
     font-size: 0.92rem;
   }
 
-  /* Lyrics on small screens */
-  .video-aspect-wrapper {
-    max-height: 28vh;
-  }
+
 
   .lyrics-toolbar {
     height: 36px;
@@ -3421,9 +3449,7 @@ button,
     width: 32px;
   }
 
-  .video-aspect-wrapper {
-    max-height: 25vh;
-  }
+
 
   .time-display {
     font-size: 0.72rem;

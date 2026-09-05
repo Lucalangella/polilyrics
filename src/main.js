@@ -475,7 +475,7 @@ function updateTrackInfo() {
   if (!currentTrackId) return;
   const meta = getTrackMeta(currentTrackId);
   songTitleEl.textContent = meta.title;
-  songArtistEl.textContent = `${meta.artist} • [${meta.id}]`;
+  songArtistEl.textContent = meta.artist;
 }
 
 let currentLyricsLoadId = 0;
@@ -1727,7 +1727,7 @@ async function playSelectedVideoWithLyrics(video, prefetchedLrc = null) {
   showPlayerView();
   showLyricsLoading(video.title, 'Fetching synchronized lines & translation...');
   if (songTitleEl) songTitleEl.textContent = video.title;
-  if (songArtistEl) songArtistEl.textContent = `${video.channel} • [${video.videoId}]`;
+  if (songArtistEl) songArtistEl.textContent = video.channel;
   if (ytResultsModal) ytResultsModal.classList.add('hidden');
   playerOverlay.classList.remove('hidden');
   const overlayText = playerOverlay.querySelector('.overlay-text');
