@@ -583,6 +583,22 @@ function onPlayerTimeUpdate(currentTime) {
 }
 
 /**
+ * Smoothly scrolls active lyric row into center of lyricsContainer without scrolling ancestor containers
+ */
+function scrollToActiveLine(indexOrRow, behavior = 'smooth') {
+  const row = typeof indexOrRow === 'number' ? document.getElementById(`lyric-row-${indexOrRow}`) : indexOrRow;
+  if (!row || !lyricsContainer) return;
+  const containerHeight = lyricsContainer.clientHeight;
+  const rowTop = row.offsetTop;
+  const rowHeight = row.offsetHeight;
+  const targetScroll = rowTop - (containerHeight / 2) + (rowHeight / 2);
+  lyricsContainer.scrollTo({
+    top: Math.max(0, targetScroll),
+    behavior
+  });
+}
+
+/**
  * Applies active highlight class and smoothly auto-scrolls into view
  */
 function setActiveLyric(index, forcedByUser = false) {
@@ -604,24 +620,21 @@ function setActiveLyric(index, forcedByUser = false) {
 
       // Smoothly auto-scroll into view if enabled
       if (autoScrollEnabled || forcedByUser) {
-        activeRow.scrollIntoView({
-          behavior: 'smooth',
-          block: 'center'
-        });
+        scrollToActiveLine(activeRow, 'smooth');
       }
     }
 
     // Update floating pill preview
     const activeLine = currentLyrics[index];
     if (activeLine) {
-      pillOriginal.textContent = activeLine.original;
-      pillTranslated.textContent = activeLine.translated;
-      activeLinePill.classList.remove('hidden');
+      if (pillOriginal) pillOriginal.textContent = activeLine.original;
+      if (pillTranslated) pillTranslated.textContent = activeLine.translated;
+      if (activeLinePill) activeLinePill.classList.remove('hidden');
     }
 
     updateCounter();
   } else {
-    activeLinePill.classList.add('hidden');
+    if (activeLinePill) activeLinePill.classList.add('hidden');
   }
 }
 
@@ -1048,17 +1061,12 @@ function setupAutocomplete({
         row.setAttribute('role', 'option');
         row.setAttribute('data-index', idx);
 
-        const officialBadge = video.isOfficial
-          ? `<span class="yt-sugg-badge-official">♪ ${escapeHtml(video.officialType || 'Official')}</span>`
-          : '';
-
         row.innerHTML = `
           <img class="yt-sugg-thumb" src="${escapeHtml(video.thumbnail)}" alt="" loading="lazy" />
           <div class="yt-sugg-video-meta">
             <span class="yt-sugg-video-title">${escapeHtml(video.title)}</span>
             <div class="yt-sugg-video-subline">
               <span class="yt-sugg-video-channel">${escapeHtml(video.channel)} ${video.duration ? `• ${escapeHtml(video.duration)}` : ''}</span>
-              ${officialBadge}
             </div>
           </div>
         `;
@@ -1089,11 +1097,6 @@ function setupAutocomplete({
         row.setAttribute('role', 'option');
         row.setAttribute('data-index', idx);
 
-        const isSyncedReady = hasKnownSyncedLyrics(text);
-        const badgeHtml = isSyncedReady
-          ? `<span class="yt-suggestion-badge">Synced Lyrics</span>`
-          : '';
-
         row.innerHTML = `
           <div class="yt-suggestion-left">
             <svg class="yt-suggestion-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1102,7 +1105,6 @@ function setupAutocomplete({
             </svg>
             <span class="yt-suggestion-text">${highlightQueryMatch(text, query)}</span>
           </div>
-          ${badgeHtml}
         `;
 
         row.addEventListener('mouseenter', () => setHighlighted(idx, false));
@@ -1464,12 +1466,6 @@ async function showYouTubeSearchResultsModal(query) {
     card.className = 'yt-video-card';
 
     const matchingLrc = findBestMatchingLrc(video, lrclibResults);
-    const officialBadgeHtml = video.isOfficial
-      ? `<span class="yt-card-badge-official">♪ ${escapeHtml(video.officialType || 'Official')}</span>`
-      : '';
-    const badgeHtml = matchingLrc?.syncedLyrics
-      ? `<span class="yt-card-badge-synced">⚡ Dual-Language Synced Lyrics</span>`
-      : `<span class="plain-badge">Plain Lyrics</span>`;
 
     card.innerHTML = `
       <div class="yt-card-thumb-wrapper">
@@ -1485,10 +1481,6 @@ async function showYouTubeSearchResultsModal(query) {
         <h4 class="yt-card-title">${escapeHtml(video.title)}</h4>
         <div class="yt-card-channel">
           <span>${escapeHtml(video.channel)}</span>
-        </div>
-        <div class="yt-card-badges">
-          ${officialBadgeHtml}
-          ${badgeHtml}
         </div>
       </div>
       <div class="yt-card-action">
