@@ -614,10 +614,11 @@ function onPlayerTimeUpdate(currentTime) {
 function scrollToActiveLine(indexOrRow, behavior = 'smooth') {
   const row = typeof indexOrRow === 'number' ? document.getElementById(`lyric-row-${indexOrRow}`) : indexOrRow;
   if (!row || !lyricsContainer) return;
-  const containerHeight = lyricsContainer.clientHeight;
-  const rowTop = row.offsetTop;
-  const rowHeight = row.offsetHeight;
-  const targetScroll = rowTop - (containerHeight / 2) + (rowHeight / 2);
+  const containerRect = lyricsContainer.getBoundingClientRect();
+  if (containerRect.height <= 0) return;
+  const rowRect = row.getBoundingClientRect();
+  const relativeTop = (rowRect.top - containerRect.top) + lyricsContainer.scrollTop;
+  const targetScroll = relativeTop - (containerRect.height / 2) + (rowRect.height / 2);
   lyricsContainer.scrollTo({
     top: Math.max(0, targetScroll),
     behavior

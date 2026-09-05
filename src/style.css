@@ -2105,6 +2105,7 @@ button,
 
 /* Scrollable Lyrics Container with Editorial Vignette Fade */
 .lyrics-scroll-container {
+  position: relative;
   flex: 1;
   min-height: 0;
   overflow-y: auto;
@@ -2856,11 +2857,12 @@ button,
   }
 
   .lyrics-scroll-container {
+    position: relative;
     flex: 1 1 auto !important;
     min-height: 0 !important;
     height: auto !important;
     overflow-y: auto !important;
-    padding: 0.75rem 0.75rem 3rem !important;
+    padding: 1.25rem 0.75rem 4.5rem !important;
   }
 
   .lyrics-list {
@@ -3234,7 +3236,7 @@ button,
   }
 
   .lyrics-scroll-container {
-    padding: 0.5rem 0.5rem 2.5rem !important;
+    padding: 1.25rem 0.6rem 4rem !important;
   }
 
   .lyric-row {
