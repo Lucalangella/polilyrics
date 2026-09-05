@@ -14,34 +14,34 @@
   --font-sans: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, sans-serif;
   --font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
 
-  /* Deep Obsidian & Slate Palette */
-  --bg-canvas: #08080a;
-  --bg-surface: #0e0f13;
-  --bg-surface-elevated: #15161b;
-  --bg-surface-hover: #1c1d24;
-  --bg-surface-active: #24252f;
-  --bg-header: rgba(14, 15, 19, 0.95);
-  --bg-bottom-bar: rgba(14, 14, 18, 0.96);
-  --bg-overlay: rgba(8, 8, 10, 0.78);
-  --bg-input: #15161b;
-  --bg-input-focus: #171920;
-  --bg-modal: #111216;
+  /* Deep Slate & Obsidian Palette */
+  --bg-canvas: #020617;
+  --bg-surface: #0b0f19;
+  --bg-surface-elevated: #0f172a;
+  --bg-surface-hover: #1e293b;
+  --bg-surface-active: #334155;
+  --bg-header: rgba(2, 6, 23, 0.90);
+  --bg-bottom-bar: rgba(2, 6, 23, 0.94);
+  --bg-overlay: rgba(2, 6, 23, 0.80);
+  --bg-input: #0f172a;
+  --bg-input-focus: #131d33;
+  --bg-modal: #0b0f19;
 
-  /* Kinpaku Gold & Champagne Craft Accents */
-  --accent-gold: #e5a93c;
-  --accent-gold-hover: #f5b74c;
-  --accent-gold-active: #d4952b;
-  --accent-gold-subtle: rgba(229, 169, 60, 0.10);
-  --accent-gold-border: rgba(229, 169, 60, 0.26);
-  --accent-gold-contrast: #08080a;
+  /* Polilyrics Vibrant Orange & Amber Craft Accents */
+  --accent-gold: #f97316;
+  --accent-gold-hover: #fb923c;
+  --accent-gold-active: #ea580c;
+  --accent-gold-subtle: rgba(249, 115, 22, 0.12);
+  --accent-gold-border: rgba(249, 115, 22, 0.30);
+  --accent-gold-contrast: #ffffff;
 
-  /* Editorial Champagne (for bilingual lyric translation) */
-  --text-champagne: #f3dfc6;
-  --text-champagne-subtle: rgba(243, 223, 198, 0.65);
+  /* Warm Peach & Champagne (for bilingual lyric translation) */
+  --text-champagne: #fed7aa;
+  --text-champagne-subtle: rgba(254, 215, 170, 0.72);
 
   /* Audio Engineering Meters & Precision Signals */
-  --meter-advance: #e5a93c;
-  --meter-delay: #60a5fa;
+  --meter-advance: #f97316;
+  --meter-delay: #38bdf8;
   --accent-emerald: #10b981;
   --emerald-subtle: rgba(16, 185, 129, 0.12);
   --emerald-border: rgba(16, 185, 129, 0.28);
@@ -53,13 +53,13 @@
   --text-tertiary: #64748b;
   --text-faint: #475569;
 
-  /* Crisp Structural Borders (Clean 1px geometry, zero blurry conflicts) */
-  --border-subtle: rgba(255, 255, 255, 0.07);
-  --border-medium: rgba(255, 255, 255, 0.12);
-  --border-strong: rgba(255, 255, 255, 0.20);
+  /* Crisp Structural Borders (Clean 1px geometry) */
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-medium: rgba(255, 255, 255, 0.14);
+  --border-strong: rgba(255, 255, 255, 0.22);
   --border-focus: var(--accent-gold);
 
-  /* Refined Elevation Shadows (Disciplined depth, no wide colored glows) */
+  /* Refined Elevation Shadows */
   --shadow-subtle: 0 1px 2px rgba(0, 0, 0, 0.35);
   --shadow-card: 0 4px 14px rgba(0, 0, 0, 0.45);
   --shadow-floating: 0 16px 36px -4px rgba(0, 0, 0, 0.75);
@@ -92,7 +92,7 @@
   --accent-cyan: var(--meter-delay);
   --accent-pink: var(--accent-gold);
   --accent-teal: var(--accent-gold);
-  --active-glow: rgba(229, 169, 60, 0.15);
+  --active-glow: rgba(249, 115, 22, 0.20);
   --active-bg: var(--accent-gold-subtle);
   --gold-subtle: var(--accent-gold-subtle);
   --gold-border: var(--accent-gold-border);
@@ -114,21 +114,21 @@
   --bg-input-focus: #ffffff;
   --bg-modal: #ffffff;
 
-  /* Kinpaku Warm Amber / Honey Bronze for Light Backgrounds */
-  --accent-gold: #d97706;
-  --accent-gold-hover: #b45309;
-  --accent-gold-active: #92400e;
-  --accent-gold-subtle: rgba(217, 119, 6, 0.12);
-  --accent-gold-border: rgba(217, 119, 6, 0.30);
+  /* High-Contrast Vibrant Orange for Light Backgrounds */
+  --accent-gold: #ea580c;
+  --accent-gold-hover: #c2410c;
+  --accent-gold-active: #9a3412;
+  --accent-gold-subtle: rgba(234, 88, 12, 0.12);
+  --accent-gold-border: rgba(234, 88, 12, 0.30);
   --accent-gold-contrast: #ffffff;
 
-  /* High-Contrast Editorial Amber-Brown for Translated Lyrics */
-  --text-champagne: #92400e;
-  --text-champagne-subtle: rgba(146, 64, 14, 0.75);
+  /* Editorial Warm Orange-Brown for Translated Lyrics */
+  --text-champagne: #c2410c;
+  --text-champagne-subtle: rgba(194, 65, 12, 0.75);
 
   /* Audio Engineering Meters & Precision Signals */
-  --meter-advance: #d97706;
-  --meter-delay: #2563eb;
+  --meter-advance: #ea580c;
+  --meter-delay: #0284c7;
   --accent-emerald: #059669;
   --emerald-subtle: rgba(5, 150, 105, 0.12);
   --emerald-border: rgba(5, 150, 105, 0.28);
@@ -159,7 +159,7 @@
   --accent-cyan: var(--meter-delay);
   --accent-pink: var(--accent-gold);
   --accent-teal: var(--accent-gold);
-  --active-glow: rgba(217, 119, 6, 0.15);
+  --active-glow: rgba(234, 88, 12, 0.15);
   --active-bg: var(--accent-gold-subtle);
   --gold-subtle: var(--accent-gold-subtle);
   --gold-border: var(--accent-gold-border);
@@ -179,18 +179,18 @@
     --bg-input-focus: #ffffff;
     --bg-modal: #ffffff;
 
-    --accent-gold: #d97706;
-    --accent-gold-hover: #b45309;
-    --accent-gold-active: #92400e;
-    --accent-gold-subtle: rgba(217, 119, 6, 0.12);
-    --accent-gold-border: rgba(217, 119, 6, 0.30);
+    --accent-gold: #ea580c;
+    --accent-gold-hover: #c2410c;
+    --accent-gold-active: #9a3412;
+    --accent-gold-subtle: rgba(234, 88, 12, 0.12);
+    --accent-gold-border: rgba(234, 88, 12, 0.30);
     --accent-gold-contrast: #ffffff;
 
-    --text-champagne: #92400e;
-    --text-champagne-subtle: rgba(146, 64, 14, 0.75);
+    --text-champagne: #c2410c;
+    --text-champagne-subtle: rgba(194, 65, 12, 0.75);
 
-    --meter-advance: #d97706;
-    --meter-delay: #2563eb;
+    --meter-advance: #ea580c;
+    --meter-delay: #0284c7;
     --accent-emerald: #059669;
     --emerald-subtle: rgba(5, 150, 105, 0.12);
     --emerald-border: rgba(5, 150, 105, 0.28);
@@ -217,7 +217,7 @@
     --accent-cyan: var(--meter-delay);
     --accent-pink: var(--accent-gold);
     --accent-teal: var(--accent-gold);
-    --active-glow: rgba(217, 119, 6, 0.15);
+    --active-glow: rgba(234, 88, 12, 0.15);
     --active-bg: var(--accent-gold-subtle);
     --gold-subtle: var(--accent-gold-subtle);
     --gold-border: var(--accent-gold-border);
@@ -326,13 +326,13 @@ button,
   width: 38px;
   height: 38px;
   border-radius: var(--radius-sm);
-  background: linear-gradient(135deg, #e5a93c 0%, #b37e23 100%);
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #08080a;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 2px 6px rgba(249, 115, 22, 0.35);
 }
 
 .brand-icon svg {
@@ -805,8 +805,131 @@ button,
 }
 
 /* ==========================================================================
-   5.5 Hero Search Landing View (Default initial view)
+   5.5 Hero Billboard Experiment & Search Landing
    ========================================================================== */
+/* Hardware acceleration & anti-flicker optimizations */
+.marquee-wrapper {
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  perspective: 1000;
+}
+
+@keyframes scroll-left {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(-50%, 0, 0); }
+}
+
+@keyframes scroll-right {
+  from { transform: translate3d(-50%, 0, 0); }
+  to { transform: translate3d(0, 0, 0); }
+}
+
+/* Background album cover speeds */
+.animate-marquee-left {
+  animation: scroll-left 55s linear infinite;
+}
+
+.animate-marquee-right {
+  animation: scroll-right 65s linear infinite;
+}
+
+.animate-marquee-left-fast {
+  animation: scroll-left 48s linear infinite;
+}
+
+/* Foreground song pills ticker speeds */
+.animate-pills-left {
+  animation: scroll-left 40s linear infinite;
+}
+
+.animate-pills-right {
+  animation: scroll-right 45s linear infinite;
+}
+
+.animate-pills-left:hover,
+.animate-pills-right:hover {
+  animation-play-state: paused;
+}
+
+.cover-card {
+  content-visibility: auto;
+  contain: layout paint;
+  width: 7rem;
+  height: 7rem;
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background-color: #0f172a;
+}
+
+@media (min-width: 640px) {
+  .cover-card {
+    width: 9rem;
+    height: 9rem;
+  }
+}
+
+.cover-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
+}
+
+.cover-card img.opacity-0 {
+  opacity: 0;
+}
+
+/* Background Billboard Wrapper */
+.billboard-background-wrapper {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0.40;
+  z-index: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1.5rem;
+  transform: rotate(-6deg) scale(1.15);
+}
+
+[data-theme="light"] .billboard-background-wrapper {
+  opacity: 0.22;
+}
+
+.billboard-row-container {
+  display: flex;
+  overflow: hidden;
+  width: 100%;
+}
+
+.billboard-row {
+  display: flex;
+  gap: 1rem;
+  flex-shrink: 0;
+}
+
+/* Frosted Vignette Overlay */
+.billboard-vignette-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background: linear-gradient(to bottom, rgba(2, 6, 23, 0.40) 0%, rgba(2, 6, 23, 0.70) 50%, #020617 100%);
+}
+
+[data-theme="light"] .billboard-vignette-overlay {
+  background: linear-gradient(to bottom, rgba(248, 250, 252, 0.40) 0%, rgba(248, 250, 252, 0.72) 50%, #f8fafc 100%);
+}
+
+/* Hero Search Landing Main Layout */
 .hero-search-landing {
   flex: 1;
   min-height: 0;
@@ -815,22 +938,32 @@ button,
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
-  padding: 2.2rem 0 0.5rem;
+  justify-content: space-between;
+  padding: 1.5rem 0 1.75rem;
   text-align: center;
   position: relative;
-  background: radial-gradient(circle at 50% 25%, rgba(229, 169, 60, 0.05) 0%, transparent 65%), var(--bg-canvas);
+  background-color: var(--bg-canvas);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.hero-spacer {
+  width: 100%;
 }
 
 .hero-content {
-  max-width: 920px;
+  position: relative;
+  z-index: 20;
+  max-width: 48rem;
   width: 100%;
   padding: 0 1.5rem;
   display: flex;
   flex-direction: column;
   align-items: center;
-  animation: heroFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  text-align: center;
+  margin: auto 0;
   flex-shrink: 0;
+  animation: heroFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes heroFadeIn {
@@ -844,110 +977,160 @@ button,
   }
 }
 
+/* Badge */
 .hero-badge {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.35rem 0.85rem;
-  border-radius: var(--radius-full);
-  background: var(--accent-gold-subtle);
-  border: 1px solid var(--accent-gold-border);
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: var(--accent-gold);
+  padding: 0.375rem 0.875rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(249, 115, 22, 0.30);
+  background: rgba(249, 115, 22, 0.10);
+  color: #fb923c;
+  font-size: 0.75rem;
+  font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   margin-bottom: 1.5rem;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .hero-badge-dot {
-  width: 6px;
-  height: 6px;
+  width: 0.5rem;
+  height: 0.5rem;
   border-radius: 50%;
-  background: var(--accent-gold);
-  box-shadow: 0 0 8px var(--accent-gold);
+  background-color: #f97316;
+  box-shadow: 0 0 8px #f97316;
+  animation: pulse-dot 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
+@keyframes pulse-dot {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.45;
+    transform: scale(0.85);
+  }
+}
+
+/* Main Heading */
 .hero-title {
-  font-size: clamp(2.5rem, 5.5vw, 4.5rem);
+  font-size: clamp(2.25rem, 5.5vw, 3.75rem);
   font-weight: 800;
-  letter-spacing: -0.035em;
-  color: var(--text-primary);
-  line-height: 1.12;
-  margin-bottom: 1rem;
+  letter-spacing: -0.025em;
+  color: #ffffff;
+  line-height: 1.18;
+  margin-bottom: 1.25rem;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="light"] .hero-title {
+  color: #0f172a;
+}
+
+.hero-gradient-text {
+  background: linear-gradient(to right, #fb923c, #f59e0b);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
 }
 
 .hero-subtitle {
-  font-size: clamp(1rem, 2vw, 1.3rem);
-  color: var(--text-secondary);
-  line-height: 1.6;
-  max-width: 680px;
-  margin-bottom: 2.25rem;
+  font-size: clamp(1rem, 2vw, 1.15rem);
+  color: #cbd5e1;
+  line-height: 1.62;
+  max-width: 36rem;
+  margin-bottom: 2rem;
   font-weight: 400;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
 }
 
-/* Big Hero Search Bar */
+[data-theme="light"] .hero-subtitle {
+  color: #475569;
+}
+
+/* Search Bar Component */
 .hero-search-box-wrapper {
   width: 100%;
-  max-width: 780px;
+  max-width: 36rem;
   position: relative;
-  margin-bottom: 2rem;
+  margin-bottom: 0.75rem;
   z-index: 200;
 }
 
 .hero-search-form {
   display: flex;
   align-items: center;
+  gap: 0.5rem;
   width: 100%;
-  height: 66px;
-  background: var(--bg-surface-elevated);
-  border: 1px solid var(--border-medium);
-  border-radius: var(--radius-lg);
-  padding: 0 0.5rem 0 1.5rem;
-  box-shadow: var(--shadow-card);
-  transition: all var(--transition-normal);
+  background: rgba(15, 23, 42, 0.80);
+  border: 1px solid rgba(51, 65, 85, 0.60);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  padding: 0.5rem;
+  border-radius: 1rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+[data-theme="light"] .hero-search-form {
+  background: rgba(255, 255, 255, 0.88);
+  border-color: rgba(203, 213, 225, 0.85);
+  box-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.08);
 }
 
 .hero-search-form:focus-within {
-  border-color: var(--accent-gold);
-  background: var(--bg-surface);
-  box-shadow: var(--shadow-card), 0 0 0 1px var(--accent-gold);
+  border-color: rgba(249, 115, 22, 0.60);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(249, 115, 22, 0.4);
+}
+
+[data-theme="light"] .hero-search-form:focus-within {
+  border-color: rgba(234, 88, 12, 0.70);
+  box-shadow: 0 20px 30px -10px rgba(234, 88, 12, 0.15), 0 0 0 1px rgba(234, 88, 12, 0.4);
 }
 
 .hero-search-icon {
-  width: 24px;
-  height: 24px;
-  color: var(--text-tertiary);
-  margin-right: 0.9rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  color: #94a3b8;
+  margin-left: 0.75rem;
   flex-shrink: 0;
   transition: color var(--transition-fast);
 }
 
 .hero-search-form:focus-within .hero-search-icon {
-  color: var(--accent-gold);
+  color: #f97316;
 }
 
 .hero-search-input {
   flex: 1;
-  height: 100%;
   background: transparent;
   border: none;
   outline: none;
-  font-size: 1.15rem;
+  font-size: 0.95rem;
   font-family: inherit;
-  color: var(--text-primary);
+  color: #ffffff;
+  padding: 0.5rem 0.25rem;
   width: 100%;
 }
 
+[data-theme="light"] .hero-search-input {
+  color: #0f172a;
+}
+
 .hero-search-input::placeholder {
-  color: var(--text-tertiary);
+  color: #64748b;
   font-weight: 400;
 }
 
 .hero-search-clear {
   background: transparent;
   border: none;
-  color: var(--text-tertiary);
+  color: #94a3b8;
   font-size: 1.35rem;
   cursor: pointer;
   padding: 0.25rem 0.5rem;
@@ -966,15 +1149,34 @@ button,
 }
 
 .hero-search-submit {
-  height: 52px;
-  padding: 0 1.75rem;
-  border-radius: var(--radius-md);
-  font-size: 1rem;
-  font-weight: 600;
+  background-color: #f97316;
+  color: #ffffff;
+  font-weight: 500;
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  transition: all 0.15s ease;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
+  gap: 0.375rem;
+  border: none;
+  cursor: pointer;
+}
+
+.hero-search-submit:hover {
+  background-color: #ea580c;
+  color: #ffffff;
+}
+
+.hero-search-submit:active {
+  transform: scale(0.95);
+}
+
+.hero-search-arrow {
+  font-size: 0.875rem;
+  line-height: 1;
 }
 
 .hero-suggestions-dropdown {
@@ -988,156 +1190,99 @@ button,
 }
 
 /* ==========================================================================
-   5.6 Full-Width Multiline Last.fm Marquee
+   5.6 Moving Rows of Songs (Pills Carousel from Polilyrics)
    ========================================================================== */
-.marquee-section {
+.hero-songs-footer {
+  position: relative;
+  z-index: 20;
   width: 100%;
-  flex: 1;
-  min-height: 0;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
-  gap: 0.65rem;
-  overflow: hidden;
-  position: relative;
-  padding: 0.5rem 0 1.25rem;
-  mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
-  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
-}
-
-.marquee-header {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  margin-bottom: 0.25rem;
-  flex-shrink: 0;
-}
-
-.marquee-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.72rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text-tertiary);
-}
-
-.marquee-badge-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--accent-gold);
-  box-shadow: 0 0 8px var(--accent-gold);
-}
-
-.marquee-row {
-  display: flex;
-  overflow: hidden;
+  gap: 0.875rem;
+  margin-top: 1.75rem;
+  padding-bottom: 0.5rem;
+  pointer-events: auto;
   user-select: none;
-  width: 100%;
-  flex-shrink: 0;
-  mask-image: linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%);
-  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%);
 }
 
-.marquee-track {
+.song-pills-row {
   display: flex;
-  align-items: center;
+  overflow: hidden;
+  width: 100%;
+}
+
+.song-pills-track {
+  display: flex;
   gap: 0.75rem;
   flex-shrink: 0;
-  padding-right: 0.75rem;
-  will-change: transform;
 }
 
-.marquee-row:hover .marquee-track {
-  animation-play-state: paused;
-}
-
-.marquee-to-left .marquee-track {
-  animation: marquee-scroll-left var(--marquee-speed, 42s) linear infinite;
-}
-
-.marquee-to-right .marquee-track {
-  animation: marquee-scroll-right var(--marquee-speed, 42s) linear infinite;
-}
-
-@keyframes marquee-scroll-left {
-  0% {
-    transform: translateX(0%);
-  }
-  100% {
-    transform: translateX(-100%);
-  }
-}
-
-@keyframes marquee-scroll-right {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(0%);
-  }
-}
-
-.marquee-pill {
-  background: var(--bg-surface-elevated);
-  border: 1px solid var(--border-subtle);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  color: var(--text-secondary);
-  border-radius: var(--radius-full);
-  padding: 0.48rem 1.15rem;
-  font-size: 0.85rem;
-  font-weight: 500;
-  font-family: inherit;
+.song-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.75rem;
+  background: rgba(15, 23, 42, 0.80);
+  border: 1px solid rgba(30, 41, 59, 0.80);
+  font-size: 0.75rem;
+  color: #cbd5e1;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all 0.15s ease;
   cursor: pointer;
-  transition: all var(--transition-fast);
-  display: inline-flex;
-  align-items: center;
-  gap: 0.55rem;
-  white-space: nowrap;
   flex-shrink: 0;
-  box-shadow: var(--shadow-subtle);
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 
-.marquee-pill:hover {
-  background: var(--bg-surface-hover);
-  border-color: var(--accent-gold);
-  color: var(--text-primary);
-  transform: translateY(-2px) scale(1.03);
-  box-shadow: var(--shadow-card);
+[data-theme="light"] .song-pill {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(226, 232, 240, 0.90);
+  color: #475569;
 }
 
-.marquee-pill:active {
-  transform: translateY(0) scale(0.98);
+.song-pill:hover {
+  border-color: rgba(249, 115, 22, 0.50);
+  color: #ffffff;
+  background: rgba(30, 41, 59, 0.95);
+  transform: translateY(-1px);
 }
 
-.marquee-pill-artist {
-  color: var(--text-primary);
-  font-weight: 600;
+[data-theme="light"] .song-pill:hover {
+  background: #ffffff;
+  color: #ea580c;
+  border-color: rgba(234, 88, 12, 0.60);
 }
 
-.marquee-pill-divider {
-  color: var(--text-tertiary);
-  opacity: 0.5;
-  font-size: 0.72rem;
+.song-pill:active {
+  transform: scale(0.97);
 }
 
-.marquee-pill-name {
-  color: var(--accent-gold);
-  font-weight: 500;
-}
-
-.marquee-pill-flag {
-  font-size: 1.05rem;
+.song-pill-flag {
+  font-size: 0.95rem;
   line-height: 1;
-  display: inline-flex;
-  align-items: center;
-  flex-shrink: 0;
-  margin-right: 0.1rem;
+}
+
+.song-pill-artist {
+  font-weight: 600;
+  color: #f1f5f9;
+}
+
+[data-theme="light"] .song-pill-artist {
+  color: #0f172a;
+}
+
+.song-pill-divider {
+  color: #64748b;
+}
+
+.song-pill-title {
+  color: #94a3b8;
+}
+
+[data-theme="light"] .song-pill-title {
+  color: #64748b;
 }
 
 /* ==========================================================================
@@ -1310,10 +1455,10 @@ button,
 .bottom-player-progress-fill {
   height: 100%;
   width: 0%;
-  background: linear-gradient(90deg, var(--accent-gold) 0%, #ffd066 100%);
+  background: linear-gradient(90deg, var(--accent-gold) 0%, #fb923c 100%);
   border-radius: 0 2px 2px 0;
   transition: width 0.12s linear;
-  box-shadow: 0 0 6px rgba(229, 169, 60, 0.5);
+  box-shadow: 0 0 8px rgba(249, 115, 22, 0.5);
 }
 
 .bottom-player-content {
@@ -1536,15 +1681,19 @@ button,
   flex-wrap: nowrap;
 }
 
+.text-gold {
+  color: var(--accent-gold);
+}
+
 /* Primary Play/Pause Button - Tactile centerpiece */
 #btn-play-pause {
   width: 38px;
   height: 38px;
   border-radius: var(--radius-full);
   background: var(--accent-gold);
-  color: #08080a;
+  color: #ffffff;
   border: none;
-  box-shadow: 0 2px 8px rgba(229, 169, 60, 0.35);
+  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.40);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3313,8 +3462,18 @@ button,
 
   /* Landing Hero Mobile Optimization */
   .hero-search-landing {
-    padding: 1.25rem 0.75rem 0.5rem;
-    justify-content: flex-start;
+    padding: 1rem 0.5rem 1rem;
+    justify-content: space-between;
+  }
+
+  .cover-card {
+    width: 6rem;
+    height: 6rem;
+    border-radius: 0.75rem;
+  }
+
+  .billboard-background-wrapper {
+    gap: 1rem;
   }
 
   .hero-content {
@@ -3323,7 +3482,7 @@ button,
 
   .hero-badge {
     font-size: 0.68rem;
-    padding: 0.22rem 0.65rem;
+    padding: 0.25rem 0.65rem;
     margin-bottom: 0.75rem;
   }
 
@@ -3335,51 +3494,51 @@ button,
 
   .hero-subtitle {
     font-size: 0.88rem;
-    line-height: 1.4;
-    margin-bottom: 1rem;
+    line-height: 1.45;
+    margin-bottom: 1.25rem;
   }
 
   .hero-search-box-wrapper {
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.5rem;
     width: 100%;
   }
 
   .hero-search-form {
-    height: 48px;
-    padding: 0 0.35rem 0 0.75rem;
+    min-height: 48px;
+    padding: 0.35rem 0.5rem;
   }
 
   .hero-search-icon {
     width: 18px;
     height: 18px;
-    margin-right: 0.5rem;
+    margin-left: 0.5rem;
   }
 
   .hero-search-input {
-    font-size: 1rem; /* >=16px prevents iOS Safari viewport auto-zoom! */
+    font-size: 1rem; /* >=16px prevents iOS Safari viewport auto-zoom */
+    padding: 0.35rem 0.25rem;
   }
 
   .hero-search-submit {
-    height: 36px;
-    padding: 0 0.75rem;
-    font-size: 0.82rem;
+    padding: 0.5rem 0.85rem;
+    font-size: 0.8rem;
     gap: 0.25rem;
   }
 
-  .marquee-section {
-    padding: 0.25rem 0 0.75rem;
-    gap: 0.45rem;
-    touch-action: pan-y;
+  .hero-songs-footer {
+    margin-top: 1rem;
+    gap: 0.6rem;
+    padding-bottom: 0.25rem;
   }
 
-  .marquee-pill {
+  .song-pill {
     padding: 0.38rem 0.75rem;
-    font-size: 0.78rem;
+    font-size: 0.72rem;
     gap: 0.4rem;
   }
 
-  .marquee-pill-flag {
-    font-size: 0.92rem;
+  .song-pill-flag {
+    font-size: 0.85rem;
   }
 
 

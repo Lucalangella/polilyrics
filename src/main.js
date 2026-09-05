@@ -1455,134 +1455,204 @@ function setupAutocomplete({
 }
 
 /**
- * Loads live trending tracks from Last.fm (or curated fallback) and creates
- * multiple alternating infinite marquee rows that fill down to the bottom of the screen.
+ * Hero Billboard Experiment & Supported Language Song Pills Ticker
+ * Renders 3 rotating rows of album art in the background (fetched from iTunes API with supported language keywords)
+ * and 2 infinite ticker rows of iconic songs strictly from the 5 supported languages (EN, ES, IT, FR, DE).
  */
-async function initTrendingMarquee() {
-  const marqueeSection = document.getElementById('marquee-section');
-  if (!marqueeSection) return;
+const SEED_KEYWORDS = [
+  'french pop', 'italian indie', 'latin hits', 'spanish rock',
+  'deutschrap', 'deutschpop', 'chanson francaise', 'cantautore',
+  'british rock', 'pop hits', 'classic rock', 'indie alternative',
+  'reggaeton hits', 'french indie', 'musica espanola', 'pop italiano'
+];
 
-  let currentTracks = FAMOUS_SONGS;
+const FALLBACK_COVERS = [
+  "https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/44/14/6e/44146e4e-0ddc-7a91-9e2c-354ecffc9779/20UMGIM92569.rgb.jpg/600x600bb.jpg",
+  "https://is1-ssl.mzstatic.com/image/thumb/Music112/v4/38/d6/70/38d67069-42b3-a15e-bc8e-c579ea666497/196626945068.jpg/600x600bb.jpg",
+  "https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/5a/88/19/5a881954-4638-3162-8178-9f170cf84414/196589025986.jpg/600x600bb.jpg",
+  "https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/1b/49/79/1b497914-7fa7-e6f7-b764-a82f06857143/21UMGIM93481.rgb.jpg/600x600bb.jpg",
+  "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/00/f8/4f/00f84f1a-b333-e18e-49b8-bc849ffb7376/20UMGIM10183.rgb.jpg/600x600bb.jpg",
+  "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/37/10/ad/3710ad1c-7cb0-0a56-91e8-639a04a62174/886444002620.jpg/600x600bb.jpg"
+];
 
-  function renderMarquee(tracksList) {
-    const list = (tracksList && tracksList.length > 0) ? tracksList : currentTracks;
-    marqueeSection.innerHTML = `
-      <div class="marquee-header">
-        <div class="marquee-badge">
-          <span class="marquee-badge-dot"></span>
-          <span>Explore Famous Songs by Language</span>
-        </div>
+// Curated songs strictly from the 5 supported languages (Italian, French, Spanish, German, English)
+const SONGS_BATCH_1 = [
+  { flag: '🇮🇹', artist: 'Andrea Bocelli', title: 'Con te partirò' },
+  { flag: '🇮🇹', artist: 'Domenico Modugno', title: 'Nel blu dipinto di blu' },
+  { flag: '🇮🇹', artist: 'Lucio Dalla', title: 'Caruso' },
+  { flag: '🇮🇹', artist: 'Mahmood', title: 'Tuta Gold' },
+  { flag: '🇮🇹', artist: 'Eros Ramazzotti', title: 'Più bella cosa' },
+  { flag: '🇫🇷', artist: 'Videoclub', title: 'Amour plastique' },
+  { flag: '🇫🇷', artist: 'Aya Nakamura', title: 'Djadja' },
+  { flag: '🇩🇪', artist: 'Kraftwerk', title: 'Das Model' },
+  { flag: '🇬🇧', artist: 'Harry Styles', title: 'As It Was' },
+  { flag: '🇪🇸', artist: 'Manu Chao', title: 'Me Gustas Tú' },
+  { flag: '🇩🇪', artist: 'Peter Fox', title: 'Haus am See' }
+];
+
+const SONGS_BATCH_2 = [
+  { flag: '🇪🇸', artist: 'Rosalía', title: 'DESPECHÁ' },
+  { flag: '🇫🇷', artist: 'Stromae', title: 'Papaoutai' },
+  { flag: '🇮🇹', artist: 'Ricchi e Poveri', title: 'Sarà perché ti amo' },
+  { flag: '🇪🇸', artist: 'C. Tangana', title: 'Tú Me Dejaste De Querer' },
+  { flag: '🇫🇷', artist: 'Indila', title: 'Dernière Danse' },
+  { flag: '🇩🇪', artist: 'Nena', title: '99 Luftballons' },
+  { flag: '🇮🇹', artist: 'Måneskin', title: 'Zitti e buoni' },
+  { flag: '🇬🇧', artist: 'Coldplay', title: 'Yellow' },
+  { flag: '🇺🇸', artist: 'Billie Eilish', title: 'Birds of a Feather' },
+  { flag: '🇪🇸', artist: 'Bad Bunny', title: 'Tití Me Preguntó' },
+  { flag: '🇩🇪', artist: 'CRO', title: 'Traum' }
+];
+
+function shuffleArray(array) {
+  const arr = [...array];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function fetchItunesAlbums(term) {
+  return new Promise((resolve) => {
+    const callbackName = 'itunes_cb_' + Math.random().toString(36).substring(2, 9);
+    const script = document.createElement('script');
+    let settled = false;
+
+    const timeout = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      if (script.parentNode) script.parentNode.removeChild(script);
+      delete window[callbackName];
+      resolve([]);
+    }, 6000);
+
+    window[callbackName] = function(data) {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timeout);
+      delete window[callbackName];
+      if (script.parentNode) script.parentNode.removeChild(script);
+      const urls = (data?.results || [])
+        .filter(item => item && item.artworkUrl100)
+        .map(item => item.artworkUrl100.replace('100x100bb.jpg', '600x600bb.jpg'));
+      resolve(urls);
+    };
+
+    script.onerror = function() {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timeout);
+      delete window[callbackName];
+      if (script.parentNode) script.parentNode.removeChild(script);
+      resolve([]);
+    };
+
+    script.src = `https://itunes.apple.com/search?term=${encodeURIComponent(term)}&entity=album&limit=25&callback=${callbackName}`;
+    document.body.appendChild(script);
+  });
+}
+
+function renderBillboardRow(containerId, items) {
+  const el = document.getElementById(containerId);
+  if (!el || !items || items.length === 0) return;
+
+  let baseList = [...items];
+  while (baseList.length < 14) {
+    baseList = baseList.concat(items);
+  }
+  const duplicated = [...baseList, ...baseList];
+
+  el.innerHTML = duplicated.map(src => `
+    <div class="cover-card">
+      <img 
+        src="${escapeHtml(src)}" 
+        decoding="async"
+        loading="lazy"
+        alt="Album Artwork" 
+        class="opacity-0"
+        onload="this.classList.remove('opacity-0')"
+        onerror="this.parentElement.style.display='none'"
+      />
+    </div>
+  `).join('');
+}
+
+function renderSongPillsRow(containerId, songs) {
+  const el = document.getElementById(containerId);
+  if (!el || !songs || songs.length === 0) return;
+
+  let baseSongs = [...songs];
+  while (baseSongs.length < 12) {
+    baseSongs = baseSongs.concat(songs);
+  }
+  const duplicated = [...baseSongs, ...baseSongs];
+
+  el.innerHTML = duplicated.map(song => {
+    const q = `${song.artist} ${song.title}`;
+    return `
+      <div class="song-pill" data-query="${escapeHtml(q)}" title="Practice with ${escapeHtml(song.artist)} - ${escapeHtml(song.title)}">
+        <span class="song-pill-flag">${song.flag}</span>
+        <span class="song-pill-artist">${escapeHtml(song.artist)}</span>
+        <span class="song-pill-divider">·</span>
+        <span class="song-pill-title">${escapeHtml(song.title)}</span>
       </div>
     `;
+  }).join('');
+}
 
-    // Calculate how many rows can fit down to the bottom of the screen
-    const windowH = window.innerHeight;
-    let numRows = 5;
-    if (windowH >= 900) numRows = 6;
-    else if (windowH >= 760) numRows = 5;
-    else if (windowH >= 620) numRows = 4;
-    else numRows = 3;
+async function initHeroBillboard() {
+  const songRow1 = document.getElementById('song-row-1');
+  const songRow2 = document.getElementById('song-row-2');
+  if (!songRow1 || !songRow2) return;
 
-    // Distribute tracks into rows
-    const rowBuckets = Array.from({ length: numRows }, () => []);
-    list.forEach((track, i) => {
-      rowBuckets[i % numRows].push(track);
-    });
+  // 1. Render Polilyrics songs pill carousels immediately with supported languages
+  renderSongPillsRow('song-row-1', SONGS_BATCH_1);
+  renderSongPillsRow('song-row-2', SONGS_BATCH_2);
 
-    rowBuckets.forEach((bucket, rowIndex) => {
-      if (bucket.length === 0) return;
+  // 2. Render initial covers instantly so there's zero blank layout
+  const fallbackShuffled = shuffleArray([...FALLBACK_COVERS, ...FALLBACK_COVERS, ...FALLBACK_COVERS, ...FALLBACK_COVERS]);
+  const chunk = Math.ceil(fallbackShuffled.length / 3);
+  renderBillboardRow('row-1', fallbackShuffled.slice(0, chunk));
+  renderBillboardRow('row-2', fallbackShuffled.slice(chunk, chunk * 2));
+  renderBillboardRow('row-3', fallbackShuffled.slice(chunk * 2));
 
-      // Duplicate bucket tracks to ensure track is wider than screen width for continuous loop
-      let rowItems = [...bucket];
-      while (rowItems.length < 10) {
-        rowItems = rowItems.concat(bucket);
+  // 3. Click delegation on hero songs footer to trigger Polilyrics search
+  const heroSongsFooter = document.getElementById('hero-songs-footer');
+  if (heroSongsFooter) {
+    heroSongsFooter.addEventListener('click', (e) => {
+      const pill = e.target.closest('.song-pill');
+      if (!pill) return;
+      const q = pill.getAttribute('data-query');
+      if (q) {
+        if (heroSearchInput) {
+          heroSearchInput.value = q;
+          if (heroSearchClear) heroSearchClear.classList.remove('hidden');
+        }
+        if (ytSearchInput) {
+          ytSearchInput.value = q;
+          if (ytSearchClear) ytSearchClear.classList.remove('hidden');
+        }
+        showYouTubeSearchResultsModal(q);
       }
-
-      // Alternating directions:
-      // Row 0: right (->)
-      // Row 1: left (<-)
-      // Row 2: right (->)
-      // Row 3: left (<-)
-      const isRight = (rowIndex % 2 === 0);
-      const dirClass = isRight ? 'marquee-to-right' : 'marquee-to-left';
-
-      // Vary duration slightly for an organic, dynamic look
-      const speed = 40 + ((rowIndex * 5) % 18);
-
-      const rowEl = document.createElement('div');
-      rowEl.className = `marquee-row ${dirClass}`;
-      rowEl.style.setProperty('--marquee-speed', `${speed}s`);
-
-      const makePills = () => rowItems.map(t => {
-        const queryText = t.query || `${t.artist} ${t.name}`;
-        const flagText = t.flag || '🎵';
-        return `
-          <button type="button" class="marquee-pill" data-query="${escapeHtml(queryText)}" title="Learn ${escapeHtml(t.language || 'language')} with ${escapeHtml(t.artist)} - ${escapeHtml(t.name)}">
-            <span class="marquee-pill-flag">${flagText}</span>
-            <span class="marquee-pill-artist">${escapeHtml(t.artist)}</span>
-            <span class="marquee-pill-divider">•</span>
-            <span class="marquee-pill-name">${escapeHtml(t.name)}</span>
-          </button>
-        `;
-      }).join('');
-
-      const trackA = document.createElement('div');
-      trackA.className = 'marquee-track';
-      trackA.innerHTML = makePills();
-
-      const trackB = document.createElement('div');
-      trackB.className = 'marquee-track';
-      trackB.setAttribute('aria-hidden', 'true');
-      trackB.innerHTML = makePills();
-
-      rowEl.appendChild(trackA);
-      rowEl.appendChild(trackB);
-      marqueeSection.appendChild(rowEl);
     });
   }
 
-  // 1. Render immediately so the user never sees a blank space
-  renderMarquee(currentTracks);
+  // 4. Fetch dynamic iTunes album covers for the 5 supported languages
+  try {
+    const randomKeywords = shuffleArray(SEED_KEYWORDS).slice(0, 4);
+    const batches = await Promise.all(randomKeywords.map(term => fetchItunesAlbums(term)));
+    let allArtworks = shuffleArray(batches.flat());
 
-  // 2. Click delegation on marqueeSection
-  marqueeSection.addEventListener('click', (e) => {
-    const pill = e.target.closest('.marquee-pill');
-    if (!pill) return;
-    const q = pill.getAttribute('data-query');
-    if (q) {
-      if (heroSearchInput) {
-        heroSearchInput.value = q;
-        if (heroSearchClear) heroSearchClear.classList.remove('hidden');
-      }
-      if (ytSearchInput) {
-        ytSearchInput.value = q;
-        if (ytSearchClear) ytSearchClear.classList.remove('hidden');
-      }
-      showYouTubeSearchResultsModal(q);
+    if (allArtworks.length >= 18) {
+      const dynamicChunk = Math.ceil(allArtworks.length / 3);
+      renderBillboardRow('row-1', allArtworks.slice(0, dynamicChunk));
+      renderBillboardRow('row-2', allArtworks.slice(dynamicChunk, dynamicChunk * 2));
+      renderBillboardRow('row-3', allArtworks.slice(dynamicChunk * 2));
     }
-  });
-
-  // 3. Re-adjust number of rows on resize
-  let resizeTimer;
-  window.addEventListener('resize', () => {
-    clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(() => {
-      renderMarquee(currentTracks);
-    }, 250);
-  });
-
-  // 4. Fetch live Last.fm trending tracks asynchronously
-  fetch('/api/trending')
-    .then(res => res.ok ? res.json() : null)
-    .then(data => {
-      if (Array.isArray(data?.tracks) && data.tracks.length > 0) {
-        currentTracks = data.tracks;
-        renderMarquee(currentTracks);
-      }
-    })
-    .catch(err => {
-      console.warn('Could not fetch live trending tracks, using fallback:', err);
-    });
+  } catch (err) {
+    console.warn('Could not fetch dynamic iTunes covers, using fallback covers:', err);
+  }
 }
 
 /**
@@ -1607,8 +1677,8 @@ function initYouTubeSearchAutocomplete() {
     submitBtnEl: heroSearchSubmit
   });
 
-  // 3. Live Last.fm Multi-Row Trending Marquee
-  initTrendingMarquee();
+  // 3. Hero Billboard & Supported Language Song Pills Ticker
+  initHeroBillboard();
 
   // 4. Header Brand Click -> Return to Landing Search
   const headerBrand = document.querySelector('.header-brand');
@@ -2407,7 +2477,7 @@ function initTheme() {
   function updateThemeUI(theme) {
     document.documentElement.setAttribute('data-theme', theme);
     if (metaThemeColor) {
-      metaThemeColor.setAttribute('content', theme === 'light' ? '#f8fafc' : '#08080a');
+      metaThemeColor.setAttribute('content', theme === 'light' ? '#f8fafc' : '#020617');
     }
     if (themeToggleBtn) {
       const iconSun = themeToggleBtn.querySelector('.icon-sun');
