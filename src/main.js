@@ -506,28 +506,10 @@ function renderLyrics(lyrics) {
     const contentEl = document.createElement('div');
     contentEl.className = 'lyric-content';
 
-    // Original lyric line with interactive words
+    // Original lyric line
     const originalEl = document.createElement('div');
     originalEl.className = 'lyric-original';
-
-    // Split into interactive word spans
-    const words = line.original.split(/\s+/);
-    words.forEach((w, wIdx) => {
-      const cleanKey = w.toLowerCase().replace(/[.,!?;:'"()]/g, '');
-      const span = document.createElement('span');
-      span.className = 'clickable-word';
-      span.textContent = w;
-
-      span.addEventListener('click', (ev) => {
-        ev.stopPropagation(); // Don't trigger line seeking
-        showWordDetails(cleanKey, line.glossary ? line.glossary[cleanKey] : null);
-      });
-
-      originalEl.appendChild(span);
-      if (wIdx < words.length - 1) {
-        originalEl.appendChild(document.createTextNode(' '));
-      }
-    });
+    originalEl.textContent = line.original;
 
     // Translated lyric line
     const translatedEl = document.createElement('div');

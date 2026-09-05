@@ -254,8 +254,7 @@ select,
 .sync-btn,
 .sync-reset-btn,
 .sync-value,
-.lyric-row,
-.clickable-word {
+.lyric-row {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
@@ -264,8 +263,7 @@ button,
 .btn,
 .sync-btn,
 .sync-reset-btn,
-.sync-value,
-.clickable-word {
+.sync-value {
   -webkit-user-select: none;
   user-select: none;
 }
@@ -2204,19 +2202,6 @@ button,
   text-shadow: none;
 }
 
-/* Interactive vocabulary words within original line */
-.clickable-word {
-  display: inline-block;
-  border-radius: var(--radius-xs);
-  padding: 0 2px;
-  cursor: pointer;
-  transition: background var(--transition-fast), color var(--transition-fast);
-}
-
-.clickable-word:hover {
-  background: var(--accent-gold-subtle);
-  color: var(--accent-gold);
-}
 
 /* Translated Lyric Line (Kinpaku Champagne) */
 .lyric-translated {
