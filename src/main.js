@@ -1482,6 +1482,7 @@ function setupAutocomplete({
 // Uses 200x200 Retina thumbnails (7 KB each) to guarantee instant offline/initial paint
 const FALLBACK_BILLBOARD_COVERS = [
   // English
+  "https://is1-ssl.mzstatic.com/image/thumb/Music128/v4/39/25/2d/39252d65-2d50-b991-0962-f7a98a761271/00602517483507.rgb.jpg/200x200bb.jpg", // Kanye West - Graduation
   "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/f5/93/8c/f5938c49-964c-31d1-4b33-78b634f71fb7/190295978075.jpg/200x200bb.jpg", // Coldplay
   "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/0e/c1/57/0ec1575f-5153-ac4b-d578-c5fa3a90bfe1/5021732511676.jpg/200x200bb.jpg", // Dua Lipa
   "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/4d/08/2a/4d082a9e-7898-1aa1-a02f-339810058d9e/14DMGIM05632.rgb.jpg/200x200bb.jpg", // Queen
@@ -1513,7 +1514,7 @@ const FALLBACK_BILLBOARD_COVERS = [
 // Rich rotating pool of 125+ iconic artists strictly across the 5 supported languages to query from Apple Music / iTunes
 const BILLBOARD_SEED_ARTISTS = {
   en: [
-    'Coldplay', 'Dua Lipa', 'Queen', 'Adele', 'The Beatles', 'Ed Sheeran', 'Harry Styles', 'Fleetwood Mac',
+    'Kanye West', 'Coldplay', 'Dua Lipa', 'Queen', 'Adele', 'The Beatles', 'Ed Sheeran', 'Harry Styles', 'Fleetwood Mac',
     'Taylor Swift', 'Billie Eilish', 'Arctic Monkeys', 'The Rolling Stones', 'Elton John', 'Oasis', 'David Bowie',
     'Radiohead', 'Bruno Mars', 'Sam Smith', 'Amy Winehouse', 'Michael Jackson', 'The Weeknd', 'Gorillaz', 'Pink Floyd', 'ABBA', 'U2'
   ],
@@ -1594,6 +1595,7 @@ const INITIAL_FALLBACK_SONGS = [
   { flag: '🇪🇸', artist: 'Rosalía', title: 'DESPECHÁ' },
   { flag: '🇩🇪', artist: 'Nena', title: '99 Luftballons' },
   { flag: '🇬🇧', artist: 'Coldplay', title: 'Yellow' },
+  { flag: '🇺🇸', artist: 'Kanye West', title: 'Stronger' },
   { flag: '🇮🇹', artist: 'Måneskin', title: 'Zitti e buoni' },
   { flag: '🇫🇷', artist: 'Daft Punk', title: 'Get Lucky' },
   { flag: '🇪🇸', artist: 'C. Tangana', title: 'Tú Me Dejaste De Querer' },

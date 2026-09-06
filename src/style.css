@@ -858,29 +858,29 @@ button,
 
 /* Background album cover speeds */
 .animate-marquee-left {
-  animation: scroll-left 55s linear infinite;
-  -webkit-animation: scroll-left 55s linear infinite;
+  animation: scroll-left 175s linear infinite;
+  -webkit-animation: scroll-left 175s linear infinite;
 }
 
 .animate-marquee-right {
-  animation: scroll-right 65s linear infinite;
-  -webkit-animation: scroll-right 65s linear infinite;
+  animation: scroll-right 185s linear infinite;
+  -webkit-animation: scroll-right 185s linear infinite;
 }
 
 .animate-marquee-left-fast {
-  animation: scroll-left 48s linear infinite;
-  -webkit-animation: scroll-left 48s linear infinite;
+  animation: scroll-left 165s linear infinite;
+  -webkit-animation: scroll-left 165s linear infinite;
 }
 
 /* Foreground song pills ticker speeds */
 .animate-pills-left {
-  animation: scroll-left 80s linear infinite;
-  -webkit-animation: scroll-left 80s linear infinite;
+  animation: scroll-left 220s linear infinite;
+  -webkit-animation: scroll-left 220s linear infinite;
 }
 
 .animate-pills-right {
-  animation: scroll-right 90s linear infinite;
-  -webkit-animation: scroll-right 90s linear infinite;
+  animation: scroll-right 240s linear infinite;
+  -webkit-animation: scroll-right 240s linear infinite;
 }
 
 /* Only pause on hover on devices that have a real pointer/mouse (never on touch screens like iPhone) */
