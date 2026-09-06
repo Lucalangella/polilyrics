@@ -1661,12 +1661,82 @@ const LANGUAGE_FLAGS = {
   de: '🇩🇪'
 };
 
-const BILLBOARD_SONGS_CACHE_KEY = 'polilyrics_billboard_songs_v2';
+const ARTIST_NATIONALITY_FLAGS = {
+  // Australia
+  'tame impala': '🇦🇺',
+  'ac/dc': '🇦🇺',
+  'sia': '🇦🇺',
+
+  // USA
+  'kanye west': '🇺🇸',
+  'taylor swift': '🇺🇸',
+  'billie eilish': '🇺🇸',
+  'michael jackson': '🇺🇸',
+  'bruno mars': '🇺🇸',
+  'eminem': '🇺🇸',
+  'kendrick lamar': '🇺🇸',
+
+  // Canada
+  'the weeknd': '🇨🇦',
+  'drake': '🇨🇦',
+  'celine dion': '🇨🇦',
+  'céline dion': '🇨🇦',
+
+  // Sweden & Ireland
+  'abba': '🇸🇪',
+  'u2': '🇮🇪',
+
+  // Belgium
+  'stromae': '🇧🇪',
+  'angèle': '🇧🇪',
+  'jacques brel': '🇧🇪',
+
+  // Puerto Rico
+  'bad bunny': '🇵🇷',
+  'luis fonsi': '🇵🇷',
+  'daddy yankee': '🇵🇷',
+  'rauw alejandro': '🇵🇷',
+  'ozuna': '🇵🇷',
+
+  // Colombia
+  'shakira': '🇨🇴',
+  'karol g': '🇨🇴',
+  'j balvin': '🇨🇴',
+  'maluma': '🇨🇴',
+  'juanes': '🇨🇴',
+  'sebastián yatra': '🇨🇴',
+  'sebastian yatra': '🇨🇴',
+  'morat': '🇨🇴',
+  'camilo': '🇨🇴',
+
+  // Argentina & Mexico
+  'bizarrap': '🇦🇷',
+  'natalia lafourcade': '🇲🇽',
+  'peso pluma': '🇲🇽',
+  'becky g': '🇲🇽',
+
+  // Austria
+  'falco': '🇦🇹'
+};
+
+function getArtistFlag(artistName, lang = null) {
+  if (!artistName) return (lang && LANGUAGE_FLAGS[lang]) || '🎵';
+  const clean = artistName.toLowerCase().trim();
+  if (ARTIST_NATIONALITY_FLAGS[clean]) return ARTIST_NATIONALITY_FLAGS[clean];
+  for (const [art, flag] of Object.entries(ARTIST_NATIONALITY_FLAGS)) {
+    if (clean.includes(art)) return flag;
+  }
+  const fallback = INITIAL_FALLBACK_SONGS.find(s => s.artist.toLowerCase() === clean);
+  if (fallback && fallback.flag) return fallback.flag;
+  return (lang && LANGUAGE_FLAGS[lang]) || '🎵';
+}
+
+const BILLBOARD_SONGS_CACHE_KEY = 'polilyrics_billboard_songs_v3';
 
 // Initial lightweight songs pool so ticker displays immediately on first frame
 const INITIAL_FALLBACK_SONGS = [
   { flag: '🇮🇹', artist: 'Andrea Bocelli', title: 'Con te partirò' },
-  { flag: '🇫🇷', artist: 'Stromae', title: 'Papaoutai' },
+  { flag: '🇧🇪', artist: 'Stromae', title: 'Papaoutai' },
   { flag: '🇪🇸', artist: 'Rosalía', title: 'DESPECHÁ' },
   { flag: '🇩🇪', artist: 'Nena', title: '99 Luftballons' },
   { flag: '🇬🇧', artist: 'Coldplay', title: 'Yellow' },
@@ -1679,7 +1749,7 @@ const INITIAL_FALLBACK_SONGS = [
   { flag: '🇬🇧', artist: 'Dua Lipa', title: 'Levitating' },
   { flag: '🇮🇹', artist: 'Mahmood', title: 'Tuta Gold' },
   { flag: '🇫🇷', artist: 'Indila', title: 'Dernière Danse' },
-  { flag: '🇪🇸', artist: 'Bad Bunny', title: 'Tití Me Preguntó' },
+  { flag: '🇵🇷', artist: 'Bad Bunny', title: 'Tití Me Preguntó' },
   { flag: '🇩🇪', artist: 'Cro', title: 'Einmal um die Welt' },
   { flag: '🇬🇧', artist: 'Queen', title: 'Bohemian Rhapsody' },
   { flag: '🇮🇹', artist: 'Lucio Dalla', title: 'Caruso' }
@@ -1687,11 +1757,17 @@ const INITIAL_FALLBACK_SONGS = [
 
 function getCachedBillboardSongs() {
   try {
+    // Purge outdated v2 cache with generic flags
+    localStorage.removeItem('polilyrics_billboard_songs_v2');
+
     const raw = localStorage.getItem(BILLBOARD_SONGS_CACHE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length >= 10) {
-        return parsed;
+        return parsed.map((s) => ({
+          ...s,
+          flag: getArtistFlag(s.artist, null) !== '🎵' ? getArtistFlag(s.artist, null) : (s.flag || '🎵')
+        }));
       }
     }
   } catch {}
@@ -1708,7 +1784,10 @@ function saveBillboardSongsToCache(songs) {
         const key = `${s.artist}-${s.title}`.toLowerCase();
         if (!seen.has(key)) {
           seen.add(key);
-          unique.push(s);
+          unique.push({
+            ...s,
+            flag: getArtistFlag(s.artist, null) !== '🎵' ? getArtistFlag(s.artist, null) : (s.flag || '🎵')
+          });
         }
       }
       localStorage.setItem(BILLBOARD_SONGS_CACHE_KEY, JSON.stringify(unique.slice(0, 100)));
@@ -1730,7 +1809,7 @@ async function fetchItunesArtistTopSongs(artistName, lang) {
       const res = await fetch(url);
       if (!res.ok) return [];
       const data = await res.json();
-      const flag = LANGUAGE_FLAGS[lang] || '🎵';
+      const flag = getArtistFlag(artistName, lang);
       return (data.results || [])
         .filter(item => item.trackName && item.artistName)
         .map(item => ({
