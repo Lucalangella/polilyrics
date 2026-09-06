@@ -89,57 +89,85 @@ export function parsePlainTextToCadence(plainText, duration = 180) {
   });
 }
 
+const pendingLrclibSearches = new Map();
+const pendingLrclibExact = new Map();
+
 /**
  * Searches LRCLIB for song lyrics
  * @param {string} query - Track name, artist, or combined query
+ * @param {AbortSignal} [signal]
  * @returns {Promise<Array<Object>>}
  */
-export async function searchLrclib(query) {
+export async function searchLrclib(query, signal = null) {
   if (!query || !query.trim()) return [];
-
-  try {
-    const res = await fetch(`${LRCLIB_BASE_URL}/search?q=${encodeURIComponent(query.trim())}`);
-    if (!res.ok) {
-      console.warn('LRCLIB search response status:', res.status);
-      return [];
-    }
-    const data = await res.json();
-    return Array.isArray(data) ? data : [];
-  } catch (err) {
-    console.warn('Failed to fetch from LRCLIB:', err);
-    return [];
+  const key = query.trim().toLowerCase();
+  if (pendingLrclibSearches.has(key)) {
+    return pendingLrclibSearches.get(key);
   }
+
+  const promise = (async () => {
+    try {
+      const res = await fetch(`${LRCLIB_BASE_URL}/search?q=${encodeURIComponent(query.trim())}`, { signal });
+      if (!res.ok) {
+        console.warn('LRCLIB search response status:', res.status);
+        return [];
+      }
+      const data = await res.json();
+      return Array.isArray(data) ? data : [];
+    } catch (err) {
+      if (err.name !== 'AbortError') {
+        console.warn('Failed to fetch from LRCLIB:', err);
+      }
+      return [];
+    } finally {
+      pendingLrclibSearches.delete(key);
+    }
+  })();
+
+  pendingLrclibSearches.set(key, promise);
+  return promise;
 }
 
 /**
  * Fetches exact matched lyrics from LRCLIB by track name and artist name
  * @param {string} trackName
  * @param {string} artistName
+ * @param {AbortSignal} [signal]
  * @returns {Promise<Object|null>}
  */
-export async function getLrclibExact(trackName, artistName) {
+export async function getLrclibExact(trackName, artistName, signal = null) {
   if (!trackName || !trackName.trim()) return null;
   const t = trackName.trim();
   const a = (artistName || '').trim();
+  const key = `${t.toLowerCase()}|${a.toLowerCase()}`;
+  if (pendingLrclibExact.has(key)) {
+    return pendingLrclibExact.get(key);
+  }
 
   let url = `${LRCLIB_BASE_URL}/get?track_name=${encodeURIComponent(t)}`;
   if (a) {
     url += `&artist_name=${encodeURIComponent(a)}`;
   }
 
-  try {
-    const res = await fetch(url);
-    if (res.ok) {
-      const data = await res.json();
-      if (data && (data.syncedLyrics || data.plainLyrics)) {
-        return data;
+  const promise = (async () => {
+    try {
+      const res = await fetch(url, { signal });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && (data.syncedLyrics || data.plainLyrics)) {
+          return data;
+        }
       }
+    } catch (err) {
+      // ignore
+    } finally {
+      pendingLrclibExact.delete(key);
     }
-  } catch (err) {
-    // ignore
-  }
+    return null;
+  })();
 
-  return null;
+  pendingLrclibExact.set(key, promise);
+  return promise;
 }
 
 /**
@@ -427,36 +455,51 @@ export async function searchYouTubeVideoId(query) {
   return null;
 }
 
+const pendingYtSearches = new Map();
+
 /**
  * Searches and returns a full list of matching YouTube videos with metadata,
  * including thumbnails, titles, artist channels, and durations.
  * @param {string} query
+ * @param {AbortSignal} [signal]
  * @returns {Promise<Array<{ videoId: string, title: string, channel: string, duration: string, thumbnail: string }>>}
  */
-export async function searchYouTubeVideos(query) {
+export async function searchYouTubeVideos(query, signal = null) {
   if (!query || !query.trim()) return [];
   const trimmed = query.trim();
-
-  try {
-    const res = await fetch(`/api/yt-search?q=${encodeURIComponent(trimmed)}`);
-    if (res.ok) {
-      const data = await res.json();
-      if (data && Array.isArray(data.videos) && data.videos.length > 0) {
-        return data.videos;
-      }
-      if (data && data.videoId) {
-        return [{
-          videoId: data.videoId,
-          title: trimmed,
-          channel: 'YouTube Video',
-          duration: '',
-          thumbnail: `https://i.ytimg.com/vi/${data.videoId}/mqdefault.jpg`
-        }];
-      }
-    }
-  } catch (err) {
-    console.warn('Failed to search YouTube videos:', err);
+  const key = trimmed.toLowerCase();
+  if (pendingYtSearches.has(key)) {
+    return pendingYtSearches.get(key);
   }
 
-  return [];
+  const promise = (async () => {
+    try {
+      const res = await fetch(`/api/yt-search?q=${encodeURIComponent(trimmed)}`, { signal });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && Array.isArray(data.videos) && data.videos.length > 0) {
+          return data.videos;
+        }
+        if (data && data.videoId) {
+          return [{
+            videoId: data.videoId,
+            title: trimmed,
+            channel: 'YouTube Video',
+            duration: '',
+            thumbnail: `https://i.ytimg.com/vi/${data.videoId}/mqdefault.jpg`
+          }];
+        }
+      }
+    } catch (err) {
+      if (err.name !== 'AbortError') {
+        console.warn('Failed to search YouTube videos:', err);
+      }
+    } finally {
+      pendingYtSearches.delete(key);
+    }
+    return [];
+  })();
+
+  pendingYtSearches.set(key, promise);
+  return promise;
 }

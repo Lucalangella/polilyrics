@@ -517,6 +517,16 @@ function updateLyricsLoadingProgress(message) {
 }
 
 let currentTranslationRequestId = 0;
+let currentTrackLoadAbortController = null;
+let currentTranslationAbortController = null;
+
+function resetTrackLoadAbortSignal() {
+  if (currentTrackLoadAbortController) {
+    currentTrackLoadAbortController.abort();
+  }
+  currentTrackLoadAbortController = new AbortController();
+  return currentTrackLoadAbortController.signal;
+}
 
 /**
  * Builds a line translations map, avoiding saving unfulfilled identical copies as translations
@@ -597,6 +607,12 @@ async function reloadLyrics() {
   const reqId = ++currentTranslationRequestId;
   showToast(`Translating lyrics to ${targetLangName}...`);
 
+  if (currentTranslationAbortController) {
+    currentTranslationAbortController.abort();
+  }
+  currentTranslationAbortController = new AbortController();
+  const signal = currentTranslationAbortController.signal;
+
   const rawLines = track.lyrics.map((l) => ({
     start: l.start,
     end: l.end,
@@ -604,8 +620,8 @@ async function reloadLyrics() {
   }));
 
   try {
-    const translated = await translationService.translateLines(rawLines, targetLang);
-    if (reqId !== currentTranslationRequestId || currentTrackId !== track.id) return;
+    const translated = await translationService.translateLines(rawLines, targetLang, null, signal);
+    if (signal.aborted || reqId !== currentTranslationRequestId || currentTrackId !== track.id) return;
 
     updateTrackTranslations(track.id, targetLang, translated);
 
@@ -629,11 +645,67 @@ async function reloadLyrics() {
   }
 }
 
+// Cached array of lyric row DOM elements to avoid document.getElementById on every tick
+let currentLyricRowElements = [];
+
 /**
- * Renders the lyrics list into the DOM
+ * Fast O(1) amortized forward check with O(log N) binary search on seek/scrub
+ */
+function findActiveLyricIndex(effectiveTime, lyrics, currentIndex) {
+  const len = lyrics.length;
+  if (len === 0) return -1;
+
+  // 1. O(1) Sequential check: Is time still within current line?
+  if (currentIndex >= 0 && currentIndex < len) {
+    const curr = lyrics[currentIndex];
+    if (effectiveTime >= curr.start && effectiveTime < curr.end) {
+      return currentIndex;
+    }
+    // Is time in the very next line (normal forward playback)?
+    const nextIdx = currentIndex + 1;
+    if (nextIdx < len) {
+      const next = lyrics[nextIdx];
+      if (effectiveTime >= next.start && effectiveTime < next.end) {
+        return nextIdx;
+      }
+    }
+  }
+
+  // 2. O(log N) Binary Search on seek / scrub
+  let low = 0;
+  let high = len - 1;
+  let candidate = -1;
+
+  while (low <= high) {
+    const mid = (low + high) >> 1;
+    const line = lyrics[mid];
+
+    if (effectiveTime >= line.start && effectiveTime < line.end) {
+      return mid;
+    }
+
+    if (effectiveTime < line.start) {
+      high = mid - 1;
+    } else {
+      candidate = mid;
+      low = mid + 1;
+    }
+  }
+
+  // Fallback: Closest previous line before effectiveTime
+  if (candidate >= 0 && effectiveTime >= lyrics[0].start) {
+    return candidate;
+  }
+
+  return -1;
+}
+
+/**
+ * Renders the lyrics list into the DOM and caches row references for O(1) lookups
  */
 function renderLyrics(lyrics) {
   lyricsList.innerHTML = '';
+  currentLyricRowElements = [];
 
   if (!lyrics || lyrics.length === 0) {
     lyricsList.innerHTML = `
@@ -692,7 +764,7 @@ function renderLyrics(lyrics) {
     row.appendChild(actionEl);
 
     /**
-     * Interactive Seeking: Clicking any lyric row must command
+     * Interactive Seeking: Clicking any lyric row commands
      * the YouTube player to seekTo(line.start, true).
      */
     row.addEventListener('click', () => {
@@ -707,6 +779,7 @@ function renderLyrics(lyrics) {
     });
 
     lyricsList.appendChild(row);
+    currentLyricRowElements.push(row);
   });
 }
 
@@ -722,7 +795,7 @@ function handleSeekToLine(index, startTime) {
 
 /**
  * Real-Time Synchronization Callback:
- * Receives current timestamp and activates corresponding lyric row accounting for sync offset.
+ * Receives current timestamp and activates corresponding lyric row in O(1) amortized time.
  */
 function onPlayerTimeUpdate(currentTime) {
   if (currentTimeTxt) currentTimeTxt.textContent = formatTime(currentTime);
@@ -741,26 +814,8 @@ function onPlayerTimeUpdate(currentTime) {
   // Calculate effective timestamp taking sync offset into account
   const effectiveTime = Math.max(0, currentTime - currentSyncOffset);
 
-  // Find active line matching start and end range
-  let activeIdx = -1;
-
-  for (let i = 0; i < currentLyrics.length; i++) {
-    const line = currentLyrics[i];
-    if (effectiveTime >= line.start && effectiveTime < line.end) {
-      activeIdx = i;
-      break;
-    }
-  }
-
-  // Fallback: If between lines, find closest previous line
-  if (activeIdx === -1 && effectiveTime >= currentLyrics[0].start) {
-    for (let i = currentLyrics.length - 1; i >= 0; i--) {
-      if (effectiveTime >= currentLyrics[i].start) {
-        activeIdx = i;
-        break;
-      }
-    }
-  }
+  // Fast O(1) sequential or O(log N) binary lookup
+  const activeIdx = findActiveLyricIndex(effectiveTime, currentLyrics, currentActiveIndex);
 
   if (activeIdx !== -1 && activeIdx !== currentActiveIndex) {
     setActiveLyric(activeIdx, false);
@@ -768,16 +823,19 @@ function onPlayerTimeUpdate(currentTime) {
 }
 
 /**
- * Smoothly scrolls active lyric row into center of lyricsContainer without scrolling ancestor containers
+ * Smoothly scrolls active lyric row into center of lyricsContainer without layout thrashing
  */
 function scrollToActiveLine(indexOrRow, behavior = 'smooth') {
-  const row = typeof indexOrRow === 'number' ? document.getElementById(`lyric-row-${indexOrRow}`) : indexOrRow;
+  const row = typeof indexOrRow === 'number'
+    ? (currentLyricRowElements[indexOrRow] || document.getElementById(`lyric-row-${indexOrRow}`))
+    : indexOrRow;
   if (!row || !lyricsContainer) return;
-  const containerRect = lyricsContainer.getBoundingClientRect();
-  if (containerRect.height <= 0) return;
-  const rowRect = row.getBoundingClientRect();
-  const relativeTop = (rowRect.top - containerRect.top) + lyricsContainer.scrollTop;
-  const targetScroll = relativeTop - (containerRect.height / 2) + (rowRect.height / 2);
+
+  const containerHeight = lyricsContainer.clientHeight;
+  if (containerHeight <= 0) return;
+
+  // Avoid getBoundingClientRect() forced reflow by using offsetTop relative to container
+  const targetScroll = row.offsetTop - (containerHeight / 2) + (row.offsetHeight / 2);
   lyricsContainer.scrollTo({
     top: Math.max(0, targetScroll),
     behavior
@@ -785,21 +843,21 @@ function scrollToActiveLine(indexOrRow, behavior = 'smooth') {
 }
 
 /**
- * Applies active highlight class and smoothly auto-scrolls into view
+ * Applies active highlight class and smoothly auto-scrolls into view using direct array access
  */
 function setActiveLyric(index, forcedByUser = false) {
   if (index === currentActiveIndex) return;
 
-  // Remove active highlight from previous row
-  if (currentActiveIndex >= 0) {
-    const prevRow = document.getElementById(`lyric-row-${currentActiveIndex}`);
+  // Remove active highlight from previous row (O(1) direct reference)
+  if (currentActiveIndex >= 0 && currentActiveIndex < currentLyricRowElements.length) {
+    const prevRow = currentLyricRowElements[currentActiveIndex];
     if (prevRow) prevRow.classList.remove('active');
   }
 
   currentActiveIndex = index;
 
   if (index >= 0 && index < currentLyrics.length) {
-    const activeRow = document.getElementById(`lyric-row-${index}`);
+    const activeRow = currentLyricRowElements[index] || document.getElementById(`lyric-row-${index}`);
     if (activeRow) {
       // Apply active highlight class
       activeRow.classList.add('active');
@@ -934,6 +992,7 @@ async function executeUniversalSearch(query) {
  */
 async function loadSongFromSearchResult(item) {
   const loadId = ++currentLyricsLoadId;
+  const signal = resetTrackLoadAbortSignal();
   const trackName = item.trackName || item.name || 'Unknown Track';
   const artistName = item.artistName || 'Unknown Artist';
   const targetLang = languageRouter.getCurrentLanguage();
@@ -950,30 +1009,27 @@ async function loadSongFromSearchResult(item) {
   // 1. Resolve YouTube ID
   let resolvedYtId = null;
   const lookupKey1 = `${artistName} - ${trackName}`.toLowerCase();
-  const lookupKey2 = trackName.toLowerCase();
+  const lookupKey2 = `${trackName} - ${artistName}`.toLowerCase();
+  const directUrlMatch = extractYouTubeId(item.trackName) || extractYouTubeId(item.artistName);
 
-  for (const [k, vid] of Object.entries(POPULAR_VIDEO_IDS)) {
-    if (lookupKey1.includes(k) || lookupKey2.includes(k) || k.includes(lookupKey2)) {
-      resolvedYtId = vid;
-      break;
-    }
-  }
-
-  // If not found in popular table, automatically resolve video ID
-  if (!resolvedYtId) {
-    if (directYtUrl && directYtUrl.value) {
-      resolvedYtId = extractYouTubeId(directYtUrl.value);
-    }
-  }
-
-  if (!resolvedYtId) {
+  if (directUrlMatch) {
+    resolvedYtId = directUrlMatch;
+  } else if (YOUTUBE_LOOKUP_MAP[lookupKey1]) {
+    resolvedYtId = YOUTUBE_LOOKUP_MAP[lookupKey1];
+  } else if (YOUTUBE_LOOKUP_MAP[lookupKey2]) {
+    resolvedYtId = YOUTUBE_LOOKUP_MAP[lookupKey2];
+  } else {
+    // Fast automatic resolve via server search endpoint
+    searchStatusBar.innerHTML = `<span>⏳ Finding music video on YouTube...</span>`;
     resolvedYtId = await searchYouTubeVideoId(`${artistName} ${trackName}`);
   }
 
-  if (loadId !== currentLyricsLoadId) return;
+  if (signal.aborted || loadId !== currentLyricsLoadId) return;
 
   if (!resolvedYtId) {
-    resolvedYtId = currentTrackId;
+    searchStatusBar.innerHTML = `<span style="color: var(--status-error-text)">Could not find a YouTube video for this track.</span>`;
+    showLyricsError(`Could not find a matching video on YouTube for "${artistName} - ${trackName}".`);
+    return;
   }
 
   // 2. Parse lyrics
@@ -1004,10 +1060,11 @@ async function loadSongFromSearchResult(item) {
       const progressMsg = `Translating lyrics: ${done} / ${total} lines...`;
       searchStatusBar.innerHTML = `<span>⏳ ${progressMsg}</span>`;
       updateLyricsLoadingProgress(progressMsg);
-    }
+    },
+    signal
   );
 
-  if (loadId !== currentLyricsLoadId) return;
+  if (signal.aborted || loadId !== currentLyricsLoadId) return;
 
   // Format into track structure
   const formattedLyrics = translatedLines.map((l) => ({
@@ -1048,6 +1105,7 @@ async function handleDirectYouTubeLoad() {
   const titleQuery = directYtTitle.value.trim();
   const targetLang = languageRouter.getCurrentLanguage();
   const loadId = ++currentLyricsLoadId;
+  const signal = resetTrackLoadAbortSignal();
 
   if (playerController) playerController.pause();
   showPlayerView();
@@ -1056,8 +1114,8 @@ async function handleDirectYouTubeLoad() {
 
   if (titleQuery) {
     searchStatusBar.innerHTML = `<span>⏳ Fetching lyrics for "${escapeHtml(titleQuery)}"...</span>`;
-    const results = await searchLrclib(titleQuery);
-    if (loadId !== currentLyricsLoadId) return;
+    const results = await searchLrclib(titleQuery, signal);
+    if (signal.aborted || loadId !== currentLyricsLoadId) return;
     if (results && results.length > 0) {
       const bestMatch = results[0];
       let rawLines = bestMatch.syncedLyrics
@@ -1072,9 +1130,10 @@ async function handleDirectYouTubeLoad() {
           if (loadId !== currentLyricsLoadId) return;
           const progressMsg = `Translating lyrics: ${done} / ${total} lines...`;
           updateLyricsLoadingProgress(progressMsg);
-        }
+        },
+        signal
       );
-      if (loadId !== currentLyricsLoadId) return;
+      if (signal.aborted || loadId !== currentLyricsLoadId) return;
 
       const formattedLyrics = translatedLines.map((l) => ({
         start: l.start,
@@ -1657,23 +1716,37 @@ function saveBillboardSongsToCache(songs) {
   } catch {}
 }
 
+const itunesSongsPending = new Map();
+
 async function fetchItunesArtistTopSongs(artistName, lang) {
-  try {
-    const url = `https://itunes.apple.com/search?term=${encodeURIComponent(artistName)}&entity=song&limit=4`;
-    const res = await fetch(url);
-    if (!res.ok) return [];
-    const data = await res.json();
-    const flag = LANGUAGE_FLAGS[lang] || '🎵';
-    return (data.results || [])
-      .filter(item => item.trackName && item.artistName)
-      .map(item => ({
-        flag,
-        artist: item.artistName,
-        title: item.trackName
-      }));
-  } catch {
-    return [];
+  const cacheKey = `${artistName.toLowerCase()}_${lang}`;
+  if (itunesSongsPending.has(cacheKey)) {
+    return itunesSongsPending.get(cacheKey);
   }
+
+  const promise = (async () => {
+    try {
+      const url = `https://itunes.apple.com/search?term=${encodeURIComponent(artistName)}&entity=song&limit=4`;
+      const res = await fetch(url);
+      if (!res.ok) return [];
+      const data = await res.json();
+      const flag = LANGUAGE_FLAGS[lang] || '🎵';
+      return (data.results || [])
+        .filter(item => item.trackName && item.artistName)
+        .map(item => ({
+          flag,
+          artist: item.artistName,
+          title: item.trackName
+        }));
+    } catch {
+      return [];
+    } finally {
+      itunesSongsPending.delete(cacheKey);
+    }
+  })();
+
+  itunesSongsPending.set(cacheKey, promise);
+  return promise;
 }
 
 async function refreshBillboardPoolFromItunes() {
@@ -1929,11 +2002,15 @@ async function showYouTubeSearchResultsModal(query) {
   ytResultsLoading.classList.remove('hidden');
   ytResultsList.innerHTML = '';
 
+  const signal = resetTrackLoadAbortSignal();
+
   // Fetch YouTube video search results and LRCLIB lyrics in parallel
   const [videos, lrclibResults] = await Promise.all([
-    searchYouTubeVideos(trimmed),
-    searchLrclib(trimmed)
+    searchYouTubeVideos(trimmed, signal),
+    searchLrclib(trimmed, signal)
   ]);
+
+  if (signal.aborted) return;
 
   ytResultsLoading.classList.add('hidden');
 
@@ -1992,6 +2069,7 @@ async function showYouTubeSearchResultsModal(query) {
  */
 async function playSelectedVideoWithLyrics(video, prefetchedLrc = null) {
   const loadId = ++currentLyricsLoadId;
+  const signal = resetTrackLoadAbortSignal();
   if (playerController) playerController.pause();
   showPlayerView();
   showLyricsLoading(video.title, 'Fetching synchronized lines & translation...');
@@ -2021,16 +2099,16 @@ async function playSelectedVideoWithLyrics(video, prefetchedLrc = null) {
   if (!lrcItem) {
     // 1. Try exact match by track_name & artist_name from LRCLIB
     if (parsed.title) {
-      lrcItem = await getLrclibExact(parsed.title, parsed.artist);
+      lrcItem = await getLrclibExact(parsed.title, parsed.artist, signal);
     }
 
-    if (loadId !== currentLyricsLoadId) return;
+    if (signal.aborted || loadId !== currentLyricsLoadId) return;
 
     // 2. Try search with parsed artist & title
     if (!lrcItem && parsed.title) {
       const searchTerms = parsed.artist ? `${parsed.artist} ${parsed.title}` : parsed.title;
-      const results = await searchLrclib(searchTerms);
-      if (loadId !== currentLyricsLoadId) return;
+      const results = await searchLrclib(searchTerms, signal);
+      if (signal.aborted || loadId !== currentLyricsLoadId) return;
       if (results && results.length > 0) {
         lrcItem = pickBestLrcResult(results, videoSec, parsed.title, parsed.artist);
       }
@@ -2039,13 +2117,13 @@ async function playSelectedVideoWithLyrics(video, prefetchedLrc = null) {
     // 3. Fallback to raw video title clean search
     if (!lrcItem) {
       const cleanTitle = video.title.replace(/\(.*?\)|\[.*?\]/g, '').replace(/official\s*(music)?\s*(video|audio)/gi, '').trim();
-      const results = await searchLrclib(`${video.channel} ${cleanTitle}`);
-      if (loadId !== currentLyricsLoadId) return;
+      const results = await searchLrclib(`${video.channel} ${cleanTitle}`, signal);
+      if (signal.aborted || loadId !== currentLyricsLoadId) return;
       if (results && results.length > 0) {
         lrcItem = pickBestLrcResult(results, videoSec, parsed.title, parsed.artist);
       } else {
-        const fallbackResults = await searchLrclib(cleanTitle);
-        if (loadId !== currentLyricsLoadId) return;
+        const fallbackResults = await searchLrclib(cleanTitle, signal);
+        if (signal.aborted || loadId !== currentLyricsLoadId) return;
         if (fallbackResults && fallbackResults.length > 0) {
           lrcItem = pickBestLrcResult(fallbackResults, videoSec, parsed.title, parsed.artist);
         }
@@ -2053,7 +2131,7 @@ async function playSelectedVideoWithLyrics(video, prefetchedLrc = null) {
     }
   }
 
-  if (loadId !== currentLyricsLoadId) return;
+  if (signal.aborted || loadId !== currentLyricsLoadId) return;
 
   let rawLines = [];
   if (lrcItem && lrcItem.syncedLyrics) {
@@ -2079,10 +2157,11 @@ async function playSelectedVideoWithLyrics(video, prefetchedLrc = null) {
       const progressMsg = `Translating lyrics: ${done} / ${total} lines...`;
       if (overlayText) overlayText.textContent = progressMsg;
       updateLyricsLoadingProgress(progressMsg);
-    }
+    },
+    signal
   );
 
-  if (loadId !== currentLyricsLoadId) return;
+  if (signal.aborted || loadId !== currentLyricsLoadId) return;
 
   const formattedLyrics = translated.map((l) => ({
     start: l.start,

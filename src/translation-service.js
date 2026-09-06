@@ -5,6 +5,7 @@
  */
 
 const CACHE_PREFIX = 'polilyrics_trans_v3_';
+const MAX_STORAGE_KEYS = 1200;
 
 /**
  * Fast zero-dependency language detector for song lyrics
@@ -45,6 +46,33 @@ class TranslationService {
   constructor() {
     this.memoryCache = new Map();
     this.cleanCorruptedCache();
+    this.enforceStorageLimit();
+  }
+
+  /**
+   * Enforces an LRU storage limit on translation keys to prevent QuotaExceededError
+   * @param {boolean} forcePrune - Whether to force eviction regardless of length
+   */
+  enforceStorageLimit(forcePrune = false) {
+    try {
+      const keys = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith(CACHE_PREFIX)) {
+          keys.push(k);
+        }
+      }
+      if (forcePrune || keys.length > MAX_STORAGE_KEYS) {
+        const countToEvict = Math.max(10, Math.floor(keys.length * 0.25));
+        const toEvict = keys.slice(0, countToEvict);
+        for (const k of toEvict) {
+          localStorage.removeItem(k);
+          this.memoryCache.delete(k);
+        }
+      }
+    } catch {
+      // ignore
+    }
   }
 
   /**
@@ -168,7 +196,11 @@ class TranslationService {
     try {
       localStorage.setItem(key, cleanTrans);
     } catch {
-      // ignore quota errors
+      // Quota exceeded safeguard: evict oldest keys and retry
+      this.enforceStorageLimit(true);
+      try {
+        localStorage.setItem(key, cleanTrans);
+      } catch {}
     }
   }
 
@@ -176,9 +208,11 @@ class TranslationService {
    * Translates a single phrase via Google Chrome Extension Neural API with MyMemory fallback
    * @param {string} text
    * @param {string} targetLang
+   * @param {AbortSignal} [signal]
    * @returns {Promise<string>}
    */
-  async translatePhrase(text, targetLang = 'it') {
+  async translatePhrase(text, targetLang = 'it', signal = null) {
+    if (signal?.aborted) return text;
     const clean = text.trim();
     if (!clean) return '';
 
@@ -193,8 +227,9 @@ class TranslationService {
     ];
 
     for (const url of googleUrls) {
+      if (signal?.aborted) return clean;
       try {
-        const res = await fetch(url);
+        const res = await fetch(url, { signal });
         if (res.ok) {
           const data = await res.json();
           if (Array.isArray(data) && data.length > 0) {
@@ -207,14 +242,16 @@ class TranslationService {
           }
         }
       } catch (err) {
-        // Try next endpoint
+        if (err.name === 'AbortError') return clean;
       }
     }
+
+    if (signal?.aborted) return clean;
 
     // 2. MyMemory fallback
     try {
       const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(clean)}&langpair=autodetect|${targetLang}`;
-      const res = await fetch(url);
+      const res = await fetch(url, { signal });
       if (res.ok) {
         const data = await res.json();
         const translated = data?.responseData?.translatedText?.trim();
@@ -229,7 +266,9 @@ class TranslationService {
         }
       }
     } catch (err) {
-      console.warn('MyMemory fallback error:', err);
+      if (err.name !== 'AbortError') {
+        console.warn('MyMemory fallback error:', err);
+      }
     }
 
     // Fallback if translation fails
@@ -240,10 +279,11 @@ class TranslationService {
    * Translates multiple lines in a single batch request via Google Translate
    * @param {string[]} linesArray
    * @param {string} targetLang
+   * @param {AbortSignal} [signal]
    * @returns {Promise<string[]|null>}
    */
-  async translateBatchGoogle(linesArray, targetLang) {
-    if (!linesArray || linesArray.length === 0) return [];
+  async translateBatchGoogle(linesArray, targetLang, signal = null) {
+    if (!linesArray || linesArray.length === 0 || signal?.aborted) return [];
     const body = linesArray.map((l) => `q=${encodeURIComponent(l)}`).join('&');
 
     const googleEndpoints = [
@@ -252,11 +292,13 @@ class TranslationService {
     ];
 
     for (const url of googleEndpoints) {
+      if (signal?.aborted) return null;
       try {
         const res = await fetch(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body
+          body,
+          signal
         });
         if (res.ok) {
           const data = await res.json();
@@ -268,7 +310,7 @@ class TranslationService {
           }
         }
       } catch (err) {
-        // Try next endpoint
+        if (err.name === 'AbortError') return null;
       }
     }
     return null;
@@ -279,10 +321,11 @@ class TranslationService {
    * Uses batch Google Translate for instant high-accuracy neural translation.
    * @param {Array<{ start: number, end: number, original: string }>} lines
    * @param {string} targetLang - Target language code (e.g. 'it', 'es', 'en', 'fr', 'de')
-   * @param {Function} onProgress - (completedCount, totalCount)
+   * @param {Function} [onProgress] - (completedCount, totalCount)
+   * @param {AbortSignal} [signal]
    * @returns {Promise<Array<{ start: number, end: number, original: string, translated: string }>>}
    */
-  async translateLines(lines, targetLang = 'it', onProgress = null) {
+  async translateLines(lines, targetLang = 'it', onProgress = null, signal = null) {
     if (!Array.isArray(lines) || lines.length === 0) return [];
 
     const total = lines.length;
@@ -308,16 +351,18 @@ class TranslationService {
     });
 
     if (onProgress) onProgress(completed, total);
-    if (pendingIndices.length === 0) return results;
+    if (pendingIndices.length === 0 || signal?.aborted) return results;
 
     // Process pending lines in batches of 20
     const CHUNK_SIZE = 20;
     for (let i = 0; i < pendingIndices.length; i += CHUNK_SIZE) {
+      if (signal?.aborted) return results;
+
       const chunkIndices = pendingIndices.slice(i, i + CHUNK_SIZE);
       const chunkOriginals = chunkIndices.map((idx) => lines[idx].original);
 
       // Attempt fast neural batch translation
-      const batchResult = await this.translateBatchGoogle(chunkOriginals, targetLang);
+      const batchResult = await this.translateBatchGoogle(chunkOriginals, targetLang, signal);
 
       if (batchResult && batchResult.length === chunkOriginals.length) {
         chunkIndices.forEach((origIdx, cIdx) => {
@@ -327,11 +372,13 @@ class TranslationService {
           completed++;
         });
       } else {
+        if (signal?.aborted) return results;
         // Fallback to per-phrase translation for this chunk
         await Promise.all(
           chunkIndices.map(async (origIdx) => {
+            if (signal?.aborted) return;
             const originalText = lines[origIdx].original;
-            const translated = await this.translatePhrase(originalText, targetLang);
+            const translated = await this.translatePhrase(originalText, targetLang, signal);
             results[origIdx].translated = translated;
             completed++;
           })

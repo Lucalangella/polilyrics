@@ -2431,6 +2431,8 @@ button,
   user-select: none;
   outline: none;
   position: relative;
+  content-visibility: auto;
+  contain-intrinsic-size: 0 58px;
 }
 
 .lyric-row:hover {

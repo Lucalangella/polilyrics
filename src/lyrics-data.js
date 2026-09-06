@@ -2,9 +2,20 @@
  * Synchronized Bilingual Lyrics Dataset Store
  * Holds dynamically searched and user-loaded tracks from YouTube and LRCLIB.
  * Persists recent dynamic tracks in localStorage.
+ * Backed by an O(1) Map for constant-time lookups.
  */
 
 export const TRACKS = [];
+const tracksMap = new Map();
+
+function syncMap() {
+  tracksMap.clear();
+  for (const t of TRACKS) {
+    if (t && t.id) {
+      tracksMap.set(t.id, t);
+    }
+  }
+}
 
 /**
  * Returns an array of synchronized lyrics objects containing { start, end, original, translated }
@@ -15,7 +26,7 @@ export const TRACKS = [];
  * @returns {Array<{ start: number, end: number, original: string, translated: string, glossary: Object }>}
  */
 export function getSynchronizedLyrics(trackId, targetLang = 'en') {
-  const track = TRACKS.find((t) => t.id === trackId);
+  const track = tracksMap.get(trackId);
   if (!track || !Array.isArray(track.lyrics)) return [];
 
   return track.lyrics.map((item) => {
@@ -42,7 +53,7 @@ export function getSynchronizedLyrics(trackId, targetLang = 'en') {
  * Attaches or updates translations for a specific track and persists if dynamic
  */
 export function updateTrackTranslations(trackId, targetLang, translatedLines) {
-  const track = TRACKS.find((t) => t.id === trackId);
+  const track = tracksMap.get(trackId);
   if (!track || !Array.isArray(track.lyrics)) return;
 
   track.lyrics.forEach((item, idx) => {
@@ -91,36 +102,41 @@ function loadPersistedDynamicTracks() {
                 }
               });
             }
-            const idx = TRACKS.findIndex((existing) => existing.id === t.id);
-            if (idx >= 0) {
-              TRACKS[idx] = { ...TRACKS[idx], ...t };
+            const existing = tracksMap.get(t.id);
+            if (existing) {
+              const idx = TRACKS.indexOf(existing);
+              if (idx >= 0) {
+                TRACKS[idx] = { ...existing, ...t };
+              }
             } else {
               TRACKS.push(t);
             }
+            syncMap();
           }
         });
       }
     }
   } catch {}
+  syncMap();
 }
 
 // Hydrate saved dynamic tracks on startup
 loadPersistedDynamicTracks();
 
 /**
- * Checks if a track exists in dataset
+ * Checks if a track exists in dataset (O(1))
  * @param {string} trackId
  */
 export function hasTrack(trackId) {
-  return TRACKS.some((t) => t.id === trackId);
+  return tracksMap.has(trackId);
 }
 
 /**
- * Gets track metadata
+ * Gets track metadata (O(1))
  * @param {string} trackId
  */
 export function getTrackMeta(trackId) {
-  return TRACKS.find((t) => t.id === trackId) || null;
+  return tracksMap.get(trackId) || null;
 }
 
 /**
@@ -130,12 +146,16 @@ export function getTrackMeta(trackId) {
  */
 export function registerDynamicTrack(track, persist = true) {
   if (!track || !track.id) return;
-  const existingIdx = TRACKS.findIndex((t) => t.id === track.id);
-  if (existingIdx >= 0) {
-    TRACKS[existingIdx] = { ...TRACKS[existingIdx], ...track };
+  const existing = tracksMap.get(track.id);
+  if (existing) {
+    const existingIdx = TRACKS.indexOf(existing);
+    if (existingIdx >= 0) {
+      TRACKS[existingIdx] = { ...existing, ...track };
+    }
   } else {
     TRACKS.unshift(track); // Put newly added song at top
   }
+  syncMap();
 
   if (persist) {
     try {
