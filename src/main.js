@@ -1541,19 +1541,11 @@ function shuffleArray(array) {
   return arr;
 }
 
-function renderBillboardRow(containerId, items) {
+function appendBillboardCards(containerId, items) {
   const el = document.getElementById(containerId);
   if (!el || !items || items.length === 0) return;
 
-  // Base list of items repeated to ensure seamless loop without excessive GPU load
-  let baseList = [...items];
-  while (baseList.length < 8) {
-    baseList = baseList.concat(items);
-  }
-  // Exactly 2 identical halves [Set A, Set A] for mathematically seamless -50% loop (16 cards per row)
-  const duplicated = [...baseList, ...baseList];
-
-  el.innerHTML = duplicated.map(src => `
+  const html = items.map(src => `
     <div class="cover-card">
       <img 
         src="${escapeHtml(src)}" 
@@ -1565,18 +1557,17 @@ function renderBillboardRow(containerId, items) {
     </div>
   `).join('');
 
+  el.insertAdjacentHTML('beforeend', html);
+
   // Immediate check for images already fulfilled from browser memory cache
-  const imgs = el.querySelectorAll('img');
+  const imgs = el.querySelectorAll('img:not(.is-loaded)');
   imgs.forEach(img => {
     if (img.complete) {
       img.classList.add('is-loaded');
     }
   });
 
-  // Reveal row smoothly
-  requestAnimationFrame(() => {
-    el.classList.add('billboard-row-visible');
-  });
+  el.classList.add('billboard-row-visible');
 }
 
 function renderSongPillsRow(containerId, songs) {
@@ -1591,6 +1582,11 @@ function renderSongPillsRow(containerId, songs) {
   // Exactly 2 identical halves [Set A, Set A] for mathematically seamless -50% translateX loop
   const duplicated = [...baseList, ...baseList];
 
+  // Remove animation class before updating DOM so the browser calculates keyframes with populated width
+  const isLeft = el.classList.contains('animate-pills-left') || containerId === 'song-row-1';
+  const animClass = isLeft ? 'animate-pills-left' : 'animate-pills-right';
+  el.classList.remove('animate-pills-left', 'animate-pills-right');
+
   el.innerHTML = duplicated.map(song => {
     const q = `${song.artist} ${song.title}`;
     return `
@@ -1602,6 +1598,10 @@ function renderSongPillsRow(containerId, songs) {
       </div>
     `;
   }).join('');
+
+  // Force synchronous reflow and re-add animation class so it starts moving immediately without needing hover
+  void el.offsetWidth;
+  el.classList.add(animClass);
 }
 
 let isBillboardInitialized = false;
@@ -1638,23 +1638,43 @@ function initHeroBillboard() {
     });
   }
 
-  // 3. Progressive row population: populate rows a bit at a time instead of all together
-  // This spaces out browser image decoding and GPU texture uploads to prevent any refresh freeze
+  // 3. Progressive multi-row hydration: load some of EACH row each time
+  // Spreads decoding work across 3 micro-batches of all rows together for immediate screen balance
   const shuffled = shuffleArray(CURATED_BILLBOARD_COVERS);
   const chunkSize = Math.ceil(shuffled.length / 3);
-  const row1Covers = shuffled.slice(0, chunkSize);
-  const row2Covers = shuffled.slice(chunkSize, chunkSize * 2);
-  const row3Covers = shuffled.slice(chunkSize * 2);
 
+  const buildRowSequence = (items) => {
+    let base = [...items];
+    while (base.length < 8) {
+      base = base.concat(items);
+    }
+    return [...base, ...base]; // 16 cards total per row
+  };
+
+  const row1Cards = buildRowSequence(shuffled.slice(0, chunkSize));
+  const row2Cards = buildRowSequence(shuffled.slice(chunkSize, chunkSize * 2));
+  const row3Cards = buildRowSequence(shuffled.slice(chunkSize * 2));
+
+  // Batch 1 (60ms): First 4 cards in Row 1, Row 2, Row 3 simultaneously (12 images total)
   setTimeout(() => {
-    renderBillboardRow('row-1', row1Covers);
+    appendBillboardCards('row-1', row1Cards.slice(0, 4));
+    appendBillboardCards('row-2', row2Cards.slice(0, 4));
+    appendBillboardCards('row-3', row3Cards.slice(0, 4));
+
+    // Batch 2 (280ms): Next 4 cards in Row 1, Row 2, Row 3 (completes Set A)
     setTimeout(() => {
-      renderBillboardRow('row-2', row2Covers);
+      appendBillboardCards('row-1', row1Cards.slice(4, 8));
+      appendBillboardCards('row-2', row2Cards.slice(4, 8));
+      appendBillboardCards('row-3', row3Cards.slice(4, 8));
+
+      // Batch 3 (520ms): Remaining 8 cards (Set B duplicate loop, fulfilled from memory cache)
       setTimeout(() => {
-        renderBillboardRow('row-3', row3Covers);
-      }, 260);
-    }, 260);
-  }, 120);
+        appendBillboardCards('row-1', row1Cards.slice(8));
+        appendBillboardCards('row-2', row2Cards.slice(8));
+        appendBillboardCards('row-3', row3Cards.slice(8));
+      }, 240);
+    }, 220);
+  }, 60);
 }
 
 /**

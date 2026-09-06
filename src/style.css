@@ -1287,6 +1287,9 @@ button,
   gap: 0.75rem;
   width: max-content;
   flex-shrink: 0;
+  will-change: transform;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
 }
 
 .song-pill {
