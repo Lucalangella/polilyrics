@@ -1559,9 +1559,24 @@ function renderBillboardRow(containerId, items) {
         src="${escapeHtml(src)}" 
         alt="Album Artwork" 
         decoding="async"
+        onload="this.classList.add('is-loaded')"
+        onerror="this.parentElement.style.display='none'"
       />
     </div>
   `).join('');
+
+  // Immediate check for images already fulfilled from browser memory cache
+  const imgs = el.querySelectorAll('img');
+  imgs.forEach(img => {
+    if (img.complete) {
+      img.classList.add('is-loaded');
+    }
+  });
+
+  // Reveal row smoothly
+  requestAnimationFrame(() => {
+    el.classList.add('billboard-row-visible');
+  });
 }
 
 function renderSongPillsRow(containerId, songs) {
@@ -1589,10 +1604,14 @@ function renderSongPillsRow(containerId, songs) {
   }).join('');
 }
 
+let isBillboardInitialized = false;
+
 function initHeroBillboard() {
   const songRow1 = document.getElementById('song-row-1');
   const songRow2 = document.getElementById('song-row-2');
   if (!songRow1 || !songRow2) return;
+  if (isBillboardInitialized) return;
+  isBillboardInitialized = true;
 
   // 1. Render Polilyrics songs pill carousels immediately with supported languages
   renderSongPillsRow('song-row-1', SONGS_BATCH_1);
@@ -1619,19 +1638,23 @@ function initHeroBillboard() {
     });
   }
 
-  // 3. Stagger billboard rows across animation frames to eliminate any refresh freeze
+  // 3. Progressive row population: populate rows a bit at a time instead of all together
+  // This spaces out browser image decoding and GPU texture uploads to prevent any refresh freeze
   const shuffled = shuffleArray(CURATED_BILLBOARD_COVERS);
   const chunkSize = Math.ceil(shuffled.length / 3);
+  const row1Covers = shuffled.slice(0, chunkSize);
+  const row2Covers = shuffled.slice(chunkSize, chunkSize * 2);
+  const row3Covers = shuffled.slice(chunkSize * 2);
 
-  requestAnimationFrame(() => {
-    renderBillboardRow('row-1', shuffled.slice(0, chunkSize));
-    requestAnimationFrame(() => {
-      renderBillboardRow('row-2', shuffled.slice(chunkSize, chunkSize * 2));
-      requestAnimationFrame(() => {
-        renderBillboardRow('row-3', shuffled.slice(chunkSize * 2));
-      });
-    });
-  });
+  setTimeout(() => {
+    renderBillboardRow('row-1', row1Covers);
+    setTimeout(() => {
+      renderBillboardRow('row-2', row2Covers);
+      setTimeout(() => {
+        renderBillboardRow('row-3', row3Covers);
+      }, 260);
+    }, 260);
+  }, 120);
 }
 
 /**

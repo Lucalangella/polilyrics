@@ -915,6 +915,12 @@ button,
   object-fit: cover;
   display: block;
   pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.cover-card img.is-loaded {
+  opacity: 1;
 }
 
 /* Background Billboard Wrapper */
@@ -951,6 +957,12 @@ button,
   gap: 1rem;
   width: max-content;
   flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.billboard-row.billboard-row-visible {
+  opacity: 1;
 }
 
 /* Frosted Vignette Overlay */
