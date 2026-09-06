@@ -1509,16 +1509,36 @@ const FALLBACK_BILLBOARD_COVERS = [
   "https://is1-ssl.mzstatic.com/image/thumb/Music3/v4/12/4a/24/124a242a-940d-1bd7-8324-87aea91560b3/886445096033.jpg/200x200bb.jpg"  // Cro
 ];
 
-// Rich rotating pool of artists strictly across the 5 supported languages to query from Apple Music / iTunes
+// Rich rotating pool of 125+ iconic artists strictly across the 5 supported languages to query from Apple Music / iTunes
 const BILLBOARD_SEED_ARTISTS = {
-  en: ['Coldplay', 'Dua Lipa', 'Queen', 'Adele', 'The Beatles', 'Ed Sheeran', 'Harry Styles', 'Fleetwood Mac'],
-  es: ['Rosalía', 'C. Tangana', 'Bad Bunny', 'Álvaro Soler', 'Shakira', 'Enrique Iglesias', 'Alejandro Sanz', 'Rauw Alejandro'],
-  fr: ['Stromae', 'Daft Punk', 'Indila', 'Videoclub', 'Angèle', 'Zaz', 'Aya Nakamura', 'Orelsan'],
-  it: ['Andrea Bocelli', 'Måneskin', 'Lucio Dalla', 'Laura Pausini', 'Fabri Fibra', 'Ultimo', 'Annalisa', 'Mahmood', 'Zucchero'],
-  de: ['Rammstein', 'Nena', 'Kraftwerk', 'Cro', 'Peter Fox', 'Herbert Grönemeyer', 'AnnenMayKantereit']
+  en: [
+    'Coldplay', 'Dua Lipa', 'Queen', 'Adele', 'The Beatles', 'Ed Sheeran', 'Harry Styles', 'Fleetwood Mac',
+    'Taylor Swift', 'Billie Eilish', 'Arctic Monkeys', 'The Rolling Stones', 'Elton John', 'Oasis', 'David Bowie',
+    'Radiohead', 'Bruno Mars', 'Sam Smith', 'Amy Winehouse', 'Michael Jackson', 'The Weeknd', 'Gorillaz', 'Pink Floyd', 'ABBA', 'U2'
+  ],
+  es: [
+    'Rosalía', 'C. Tangana', 'Bad Bunny', 'Álvaro Soler', 'Shakira', 'Enrique Iglesias', 'Alejandro Sanz', 'Rauw Alejandro',
+    'Aitana', 'J Balvin', 'Maluma', 'Luis Fonsi', 'Daddy Yankee', 'Ricky Martin', 'Juanes', 'Sebastián Yatra',
+    'Morat', 'Camilo', 'Quevedo', 'Bizarrap', 'Manuel Turizo', 'Ozuna', 'Becky G', 'Natalia Lafourcade', 'Jarabe de Palo'
+  ],
+  fr: [
+    'Stromae', 'Daft Punk', 'Indila', 'Videoclub', 'Angèle', 'Zaz', 'Aya Nakamura', 'Orelsan',
+    'Christine and the Queens', 'Jain', 'Kendji Girac', 'Louane', 'Soprano', 'Gims', 'Julien Doré',
+    'Clara Luciani', 'Pomme', 'Phoenix', 'Justice', 'Édith Piaf', 'Jacques Brel', 'Charles Aznavour', 'Amir', 'Lomepal', 'Bigflo & Oli'
+  ],
+  it: [
+    'Andrea Bocelli', 'Måneskin', 'Lucio Dalla', 'Laura Pausini', 'Fabri Fibra', 'Ultimo', 'Annalisa', 'Mahmood', 'Zucchero',
+    'Eros Ramazzotti', 'Tiziano Ferro', 'Fedez', 'Marco Mengoni', 'Giorgia', 'Cesare Cremonini', 'Jovanotti',
+    'Ligabue', 'Vasco Rossi', 'Lazza', 'Blanco', 'Elodie', 'Ghali', 'Madame', 'Emma Marrone', 'Ricchi e Poveri'
+  ],
+  de: [
+    'Rammstein', 'Nena', 'Kraftwerk', 'Cro', 'Peter Fox', 'Herbert Grönemeyer', 'AnnenMayKantereit',
+    'Tokio Hotel', 'Sarah Connor', 'Mark Forster', 'Apache 207', 'Alligatoah', 'Clueso', 'Sido',
+    'Namika', 'Lena', 'Robin Schulz', 'Milky Chance', 'Casper', 'Jan Delay', 'Falco', 'Die Toten Hosen', 'Die Ärzte', 'Silbermond', 'Bausa'
+  ]
 };
 
-const BILLBOARD_CACHE_KEY = 'polilyrics_billboard_pool_v1';
+const BILLBOARD_CACHE_KEY = 'polilyrics_billboard_pool_v2';
 
 function getCachedBillboardCovers() {
   try {
@@ -1536,7 +1556,7 @@ function getCachedBillboardCovers() {
 function saveBillboardCoversToCache(covers) {
   try {
     if (Array.isArray(covers) && covers.length > 0) {
-      const unique = Array.from(new Set(covers)).slice(0, 90);
+      const unique = Array.from(new Set(covers)).slice(0, 150);
       localStorage.setItem(BILLBOARD_CACHE_KEY, JSON.stringify(unique));
     }
   } catch {}
@@ -1558,11 +1578,11 @@ async function fetchItunesArtistAlbums(artistName) {
 
 async function refreshBillboardPoolFromItunes() {
   try {
-    // Pick 1 random artist from each of the 5 supported languages
+    // Pick 2 random artists from each of the 5 supported languages (10 artists total per cycle)
     const languages = Object.keys(BILLBOARD_SEED_ARTISTS);
-    const selectedArtists = languages.map(lang => {
-      const list = BILLBOARD_SEED_ARTISTS[lang];
-      return list[Math.floor(Math.random() * list.length)];
+    const selectedArtists = languages.flatMap(lang => {
+      const list = shuffleArray(BILLBOARD_SEED_ARTISTS[lang]);
+      return list.slice(0, 2);
     });
 
     const results = await Promise.allSettled(
