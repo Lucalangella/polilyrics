@@ -1,6 +1,5 @@
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
-import { FAMOUS_SONGS } from './src/famous-songs.js';
 
 function classifyOfficial(title, channel, badges = []) {
   const isVerifiedArtist = badges.some((b) => /artist/i.test(b));
@@ -138,7 +137,7 @@ function youtubeSearchPlugin() {
       res.statusCode = 200;
       res.setHeader('Content-Type', 'application/json');
       res.setHeader('Access-Control-Allow-Origin', '*');
-      res.end(JSON.stringify({ tracks: FAMOUS_SONGS }));
+      res.end(JSON.stringify({ tracks: [] }));
       return;
     }
 

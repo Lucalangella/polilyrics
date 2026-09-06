@@ -29,7 +29,6 @@ import {
 } from './lyrics-service.js';
 import { translationService } from './translation-service.js';
 import { playerController } from './player.js';
-import { FAMOUS_SONGS } from './famous-songs.js';
 
 // Expose language router utility reading navigator.language with in-memory / localStorage overrides
 export { languageRouter };
@@ -474,8 +473,10 @@ function initTrackSelection() {
 function updateTrackInfo() {
   if (!currentTrackId) return;
   const meta = getTrackMeta(currentTrackId);
-  songTitleEl.textContent = meta.title;
-  songArtistEl.textContent = meta.artist;
+  if (meta) {
+    songTitleEl.textContent = meta.title || '';
+    songArtistEl.textContent = meta.artist || '';
+  }
 }
 
 let currentLyricsLoadId = 0;
@@ -1576,53 +1577,124 @@ async function fetchItunesArtistAlbums(artistName) {
   }
 }
 
-async function refreshBillboardPoolFromItunes() {
+const LANGUAGE_FLAGS = {
+  en: '🇬🇧',
+  es: '🇪🇸',
+  fr: '🇫🇷',
+  it: '🇮🇹',
+  de: '🇩🇪'
+};
+
+const BILLBOARD_SONGS_CACHE_KEY = 'polilyrics_billboard_songs_v2';
+
+// Initial lightweight songs pool so ticker displays immediately on first frame
+const INITIAL_FALLBACK_SONGS = [
+  { flag: '🇮🇹', artist: 'Andrea Bocelli', title: 'Con te partirò' },
+  { flag: '🇫🇷', artist: 'Stromae', title: 'Papaoutai' },
+  { flag: '🇪🇸', artist: 'Rosalía', title: 'DESPECHÁ' },
+  { flag: '🇩🇪', artist: 'Nena', title: '99 Luftballons' },
+  { flag: '🇬🇧', artist: 'Coldplay', title: 'Yellow' },
+  { flag: '🇮🇹', artist: 'Måneskin', title: 'Zitti e buoni' },
+  { flag: '🇫🇷', artist: 'Daft Punk', title: 'Get Lucky' },
+  { flag: '🇪🇸', artist: 'C. Tangana', title: 'Tú Me Dejaste De Querer' },
+  { flag: '🇩🇪', artist: 'Kraftwerk', title: 'Das Model' },
+  { flag: '🇬🇧', artist: 'Dua Lipa', title: 'Levitating' },
+  { flag: '🇮🇹', artist: 'Mahmood', title: 'Tuta Gold' },
+  { flag: '🇫🇷', artist: 'Indila', title: 'Dernière Danse' },
+  { flag: '🇪🇸', artist: 'Bad Bunny', title: 'Tití Me Preguntó' },
+  { flag: '🇩🇪', artist: 'Cro', title: 'Einmal um die Welt' },
+  { flag: '🇬🇧', artist: 'Queen', title: 'Bohemian Rhapsody' },
+  { flag: '🇮🇹', artist: 'Lucio Dalla', title: 'Caruso' }
+];
+
+function getCachedBillboardSongs() {
   try {
-    // Pick 2 random artists from each of the 5 supported languages (10 artists total per cycle)
-    const languages = Object.keys(BILLBOARD_SEED_ARTISTS);
-    const selectedArtists = languages.flatMap(lang => {
-      const list = shuffleArray(BILLBOARD_SEED_ARTISTS[lang]);
-      return list.slice(0, 2);
-    });
+    const raw = localStorage.getItem(BILLBOARD_SONGS_CACHE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length >= 10) {
+        return parsed;
+      }
+    }
+  } catch {}
+  return null;
+}
 
-    const results = await Promise.allSettled(
-      selectedArtists.map(artist => fetchItunesArtistAlbums(artist))
-    );
-
-    const newArtworks = results
-      .filter(r => r.status === 'fulfilled' && Array.isArray(r.value))
-      .flatMap(r => r.value);
-
-    if (newArtworks.length >= 8) {
-      const existing = getCachedBillboardCovers() || FALLBACK_BILLBOARD_COVERS;
-      const combined = shuffleArray(Array.from(new Set([...newArtworks, ...existing])));
-      saveBillboardCoversToCache(combined);
+function saveBillboardSongsToCache(songs) {
+  try {
+    if (Array.isArray(songs) && songs.length > 0) {
+      const seen = new Set();
+      const unique = [];
+      for (const s of songs) {
+        if (!s || !s.artist || !s.title) continue;
+        const key = `${s.artist}-${s.title}`.toLowerCase();
+        if (!seen.has(key)) {
+          seen.add(key);
+          unique.push(s);
+        }
+      }
+      localStorage.setItem(BILLBOARD_SONGS_CACHE_KEY, JSON.stringify(unique.slice(0, 100)));
     }
   } catch {}
 }
 
-// Curated songs strictly from the 5 supported languages (Italian, French, Spanish, German, English)
-const SONGS_BATCH_1 = [
-  { flag: '🇮🇹', artist: 'Andrea Bocelli', title: 'Con te partirò' },
-  { flag: '🇮🇹', artist: 'Domenico Modugno', title: 'Nel blu dipinto di blu' },
-  { flag: '🇮🇹', artist: 'Lucio Dalla', title: 'Caruso' },
-  { flag: '🇮🇹', artist: 'Mahmood', title: 'Tuta Gold' },
-  { flag: '🇮🇹', artist: 'Eros Ramazzotti', title: 'Più bella cosa' },
-  { flag: '🇫🇷', artist: 'Videoclub', title: 'Amour plastique' },
-  { flag: '🇫🇷', artist: 'Aya Nakamura', title: 'Djadja' },
-  { flag: '🇩🇪', artist: 'Kraftwerk', title: 'Das Model' }
-];
+async function fetchItunesArtistTopSongs(artistName, lang) {
+  try {
+    const url = `https://itunes.apple.com/search?term=${encodeURIComponent(artistName)}&entity=song&limit=4`;
+    const res = await fetch(url);
+    if (!res.ok) return [];
+    const data = await res.json();
+    const flag = LANGUAGE_FLAGS[lang] || '🎵';
+    return (data.results || [])
+      .filter(item => item.trackName && item.artistName)
+      .map(item => ({
+        flag,
+        artist: item.artistName,
+        title: item.trackName
+      }));
+  } catch {
+    return [];
+  }
+}
 
-const SONGS_BATCH_2 = [
-  { flag: '🇪🇸', artist: 'Rosalía', title: 'DESPECHÁ' },
-  { flag: '🇫🇷', artist: 'Stromae', title: 'Papaoutai' },
-  { flag: '🇮🇹', artist: 'Ricchi e Poveri', title: 'Sarà perché ti amo' },
-  { flag: '🇪🇸', artist: 'C. Tangana', title: 'Tú Me Dejaste De Querer' },
-  { flag: '🇫🇷', artist: 'Indila', title: 'Dernière Danse' },
-  { flag: '🇩🇪', artist: 'Nena', title: '99 Luftballons' },
-  { flag: '🇮🇹', artist: 'Måneskin', title: 'Zitti e buoni' },
-  { flag: '🇬🇧', artist: 'Coldplay', title: 'Yellow' }
-];
+async function refreshBillboardPoolFromItunes() {
+  try {
+    // Pick 2 random artists from each of the 5 supported languages (10 artists total per cycle)
+    const languages = Object.keys(BILLBOARD_SEED_ARTISTS);
+    const selectedEntries = languages.flatMap(lang => {
+      const list = shuffleArray(BILLBOARD_SEED_ARTISTS[lang]);
+      return list.slice(0, 2).map(artist => ({ artist, lang }));
+    });
+
+    // Concurrently fetch both albums and top songs for the selected artists
+    const [albumResults, songResults] = await Promise.all([
+      Promise.allSettled(selectedEntries.map(e => fetchItunesArtistAlbums(e.artist))),
+      Promise.allSettled(selectedEntries.map(e => fetchItunesArtistTopSongs(e.artist, e.lang)))
+    ]);
+
+    // 1. Process and cache album covers
+    const newArtworks = albumResults
+      .filter(r => r.status === 'fulfilled' && Array.isArray(r.value))
+      .flatMap(r => r.value);
+
+    if (newArtworks.length >= 8) {
+      const existingCovers = getCachedBillboardCovers() || FALLBACK_BILLBOARD_COVERS;
+      const combinedCovers = shuffleArray(Array.from(new Set([...newArtworks, ...existingCovers])));
+      saveBillboardCoversToCache(combinedCovers);
+    }
+
+    // 2. Process and cache top songs
+    const newSongs = songResults
+      .filter(r => r.status === 'fulfilled' && Array.isArray(r.value))
+      .flatMap(r => r.value);
+
+    if (newSongs.length >= 8) {
+      const existingSongs = getCachedBillboardSongs() || INITIAL_FALLBACK_SONGS;
+      const combinedSongs = shuffleArray([...newSongs, ...existingSongs]);
+      saveBillboardSongsToCache(combinedSongs);
+    }
+  } catch {}
+}
 
 function shuffleArray(array) {
   const arr = [...array];
@@ -1714,9 +1786,12 @@ function initHeroBillboard() {
   if (isBillboardInitialized) return;
   isBillboardInitialized = true;
 
-  // 1. Render Polilyrics songs pill carousels immediately with supported languages
-  renderSongPillsRow('song-row-1', SONGS_BATCH_1);
-  renderSongPillsRow('song-row-2', SONGS_BATCH_2);
+  // 1. Render Polilyrics songs pill carousels dynamically from rotating pool
+  const songsPool = getCachedBillboardSongs() || INITIAL_FALLBACK_SONGS;
+  const shuffledSongs = shuffleArray(songsPool);
+  const mid = Math.ceil(shuffledSongs.length / 2);
+  renderSongPillsRow('song-row-1', shuffledSongs.slice(0, mid));
+  renderSongPillsRow('song-row-2', shuffledSongs.slice(mid));
 
   // 2. Click delegation on hero songs footer to trigger Polilyrics search
   const heroSongsFooter = document.getElementById('hero-songs-footer');
