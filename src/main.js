@@ -1541,11 +1541,19 @@ function shuffleArray(array) {
   return arr;
 }
 
-function appendBillboardCards(containerId, items) {
+function renderBillboardRow(containerId, items) {
   const el = document.getElementById(containerId);
   if (!el || !items || items.length === 0) return;
 
-  const html = items.map(src => `
+  // Base list of items repeated to ensure seamless loop without excessive GPU load
+  let baseList = [...items];
+  while (baseList.length < 8) {
+    baseList = baseList.concat(items);
+  }
+  // Exactly 2 identical halves [Set A, Set A] for mathematically seamless -50% loop (16 cards per row)
+  const duplicated = [...baseList, ...baseList];
+
+  el.innerHTML = duplicated.map(src => `
     <div class="cover-card">
       <img 
         src="${escapeHtml(src)}" 
@@ -1557,17 +1565,18 @@ function appendBillboardCards(containerId, items) {
     </div>
   `).join('');
 
-  el.insertAdjacentHTML('beforeend', html);
-
   // Immediate check for images already fulfilled from browser memory cache
-  const imgs = el.querySelectorAll('img:not(.is-loaded)');
+  const imgs = el.querySelectorAll('img');
   imgs.forEach(img => {
     if (img.complete) {
       img.classList.add('is-loaded');
     }
   });
 
-  el.classList.add('billboard-row-visible');
+  // Reveal row smoothly with fade-in
+  requestAnimationFrame(() => {
+    el.classList.add('billboard-row-visible');
+  });
 }
 
 function renderSongPillsRow(containerId, songs) {
@@ -1638,43 +1647,16 @@ function initHeroBillboard() {
     });
   }
 
-  // 3. Progressive multi-row hydration: load some of EACH row each time
-  // Spreads decoding work across 3 micro-batches of all rows together for immediate screen balance
-  const shuffled = shuffleArray(CURATED_BILLBOARD_COVERS);
-  const chunkSize = Math.ceil(shuffled.length / 3);
-
-  const buildRowSequence = (items) => {
-    let base = [...items];
-    while (base.length < 8) {
-      base = base.concat(items);
-    }
-    return [...base, ...base]; // 16 cards total per row
-  };
-
-  const row1Cards = buildRowSequence(shuffled.slice(0, chunkSize));
-  const row2Cards = buildRowSequence(shuffled.slice(chunkSize, chunkSize * 2));
-  const row3Cards = buildRowSequence(shuffled.slice(chunkSize * 2));
-
-  // Batch 1 (60ms): First 4 cards in Row 1, Row 2, Row 3 simultaneously (12 images total)
+  // 3. Defer billboard covers slightly after initial frame so UI and song pills paint at 60fps first.
+  // Rendering all 3 rows with full [Set A, Set A] eliminates the geometry jumps (glitch) and ensures
+  // Row 2 (which starts at -50% translateX) has its second half fully populated from frame 0.
   setTimeout(() => {
-    appendBillboardCards('row-1', row1Cards.slice(0, 4));
-    appendBillboardCards('row-2', row2Cards.slice(0, 4));
-    appendBillboardCards('row-3', row3Cards.slice(0, 4));
-
-    // Batch 2 (280ms): Next 4 cards in Row 1, Row 2, Row 3 (completes Set A)
-    setTimeout(() => {
-      appendBillboardCards('row-1', row1Cards.slice(4, 8));
-      appendBillboardCards('row-2', row2Cards.slice(4, 8));
-      appendBillboardCards('row-3', row3Cards.slice(4, 8));
-
-      // Batch 3 (520ms): Remaining 8 cards (Set B duplicate loop, fulfilled from memory cache)
-      setTimeout(() => {
-        appendBillboardCards('row-1', row1Cards.slice(8));
-        appendBillboardCards('row-2', row2Cards.slice(8));
-        appendBillboardCards('row-3', row3Cards.slice(8));
-      }, 240);
-    }, 220);
-  }, 60);
+    const shuffled = shuffleArray(CURATED_BILLBOARD_COVERS);
+    const chunkSize = Math.ceil(shuffled.length / 3);
+    renderBillboardRow('row-1', shuffled.slice(0, chunkSize));
+    renderBillboardRow('row-2', shuffled.slice(chunkSize, chunkSize * 2));
+    renderBillboardRow('row-3', shuffled.slice(chunkSize * 2));
+  }, 120);
 }
 
 /**
