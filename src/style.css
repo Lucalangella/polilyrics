@@ -1268,9 +1268,9 @@ button,
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  gap: 0.875rem;
-  margin-top: 1.75rem;
-  padding-bottom: 0.5rem;
+  gap: 0.625rem;
+  margin-top: 1.5rem;
+  padding: 6px 0 0.5rem;
   pointer-events: auto;
   user-select: none;
   transition: opacity var(--transition-fast);
@@ -1280,6 +1280,7 @@ button,
   display: flex;
   overflow: hidden;
   width: 100%;
+  padding: 6px 0;
 }
 
 .song-pills-track {
