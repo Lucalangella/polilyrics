@@ -1545,12 +1545,12 @@ function renderBillboardRow(containerId, items) {
   const el = document.getElementById(containerId);
   if (!el || !items || items.length === 0) return;
 
-  // Base list of items repeated to ensure width >= 2400px (covers ultrawide & 4K screens)
+  // Base list of items repeated to ensure seamless loop without excessive GPU load
   let baseList = [...items];
-  while (baseList.length < 15) {
+  while (baseList.length < 8) {
     baseList = baseList.concat(items);
   }
-  // Exactly 2 identical halves [Set A, Set A] for mathematically seamless -50% translateX loop
+  // Exactly 2 identical halves [Set A, Set A] for mathematically seamless -50% loop (16 cards per row)
   const duplicated = [...baseList, ...baseList];
 
   el.innerHTML = duplicated.map(src => `
@@ -1558,7 +1558,6 @@ function renderBillboardRow(containerId, items) {
       <img 
         src="${escapeHtml(src)}" 
         alt="Album Artwork" 
-        loading="eager"
         decoding="async"
       />
     </div>
@@ -1599,14 +1598,7 @@ function initHeroBillboard() {
   renderSongPillsRow('song-row-1', SONGS_BATCH_1);
   renderSongPillsRow('song-row-2', SONGS_BATCH_2);
 
-  // 2. Render curated verified album covers across the 3 marquee rows
-  const shuffled = shuffleArray(CURATED_BILLBOARD_COVERS);
-  const chunkSize = Math.ceil(shuffled.length / 3);
-  renderBillboardRow('row-1', shuffled.slice(0, chunkSize));
-  renderBillboardRow('row-2', shuffled.slice(chunkSize, chunkSize * 2));
-  renderBillboardRow('row-3', shuffled.slice(chunkSize * 2));
-
-  // 3. Click delegation on hero songs footer to trigger Polilyrics search
+  // 2. Click delegation on hero songs footer to trigger Polilyrics search
   const heroSongsFooter = document.getElementById('hero-songs-footer');
   if (heroSongsFooter) {
     heroSongsFooter.addEventListener('click', (e) => {
@@ -1626,6 +1618,20 @@ function initHeroBillboard() {
       }
     });
   }
+
+  // 3. Stagger billboard rows across animation frames to eliminate any refresh freeze
+  const shuffled = shuffleArray(CURATED_BILLBOARD_COVERS);
+  const chunkSize = Math.ceil(shuffled.length / 3);
+
+  requestAnimationFrame(() => {
+    renderBillboardRow('row-1', shuffled.slice(0, chunkSize));
+    requestAnimationFrame(() => {
+      renderBillboardRow('row-2', shuffled.slice(chunkSize, chunkSize * 2));
+      requestAnimationFrame(() => {
+        renderBillboardRow('row-3', shuffled.slice(chunkSize * 2));
+      });
+    });
+  });
 }
 
 /**
@@ -1650,8 +1656,10 @@ function initYouTubeSearchAutocomplete() {
     submitBtnEl: heroSearchSubmit
   });
 
-  // 3. Hero Billboard & Supported Language Song Pills Ticker
-  initHeroBillboard();
+  // 3. Hero Billboard & Supported Language Song Pills Ticker (deferred to next frame to prevent initial paint stall)
+  requestAnimationFrame(() => {
+    initHeroBillboard();
+  });
 
   // 4. Header Brand Click -> Return to Landing Search
   const headerBrand = document.querySelector('.header-brand');

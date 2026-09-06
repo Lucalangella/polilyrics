@@ -922,6 +922,7 @@ button,
   position: absolute;
   inset: -20% -10%;
   overflow: hidden;
+  contain: layout paint;
   pointer-events: none;
   opacity: 0.50;
   z-index: 0;
