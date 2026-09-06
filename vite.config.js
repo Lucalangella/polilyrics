@@ -133,14 +133,6 @@ function youtubeSearchPlugin() {
       }
     }
 
-    if (req.url && req.url.startsWith('/api/trending')) {
-      res.statusCode = 200;
-      res.setHeader('Content-Type', 'application/json');
-      res.setHeader('Access-Control-Allow-Origin', '*');
-      res.end(JSON.stringify({ tracks: [] }));
-      return;
-    }
-
     next();
   };
 
