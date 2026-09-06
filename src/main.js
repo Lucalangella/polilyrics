@@ -1477,9 +1477,9 @@ function setupAutocomplete({
  * and 2 infinite ticker rows of iconic songs strictly from the 5 supported languages (EN, ES, IT, FR, DE).
  */
 
-// Curated, verified album artwork from legendary artists strictly across the 5 supported languages (EN, ES, FR, IT, DE)
-// Uses 200x200 Retina thumbnails (7 KB each) to prevent mobile/desktop GPU texture memory overflow
-const CURATED_BILLBOARD_COVERS = [
+// Verified fallback album artwork across the 5 supported languages (EN, ES, FR, IT, DE)
+// Uses 200x200 Retina thumbnails (7 KB each) to guarantee instant offline/initial paint
+const FALLBACK_BILLBOARD_COVERS = [
   // English
   "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/f5/93/8c/f5938c49-964c-31d1-4b33-78b634f71fb7/190295978075.jpg/200x200bb.jpg", // Coldplay
   "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/0e/c1/57/0ec1575f-5153-ac4b-d578-c5fa3a90bfe1/5021732511676.jpg/200x200bb.jpg", // Dua Lipa
@@ -1508,6 +1508,78 @@ const CURATED_BILLBOARD_COVERS = [
   "https://is1-ssl.mzstatic.com/image/thumb/Music1/v4/ac/34/2d/ac342dcf-8349-676f-9510-c1bd27e932d2/dj.ajlyslln.jpg/200x200bb.jpg", // Kraftwerk
   "https://is1-ssl.mzstatic.com/image/thumb/Music3/v4/12/4a/24/124a242a-940d-1bd7-8324-87aea91560b3/886445096033.jpg/200x200bb.jpg"  // Cro
 ];
+
+// Rich rotating pool of artists strictly across the 5 supported languages to query from Apple Music / iTunes
+const BILLBOARD_SEED_ARTISTS = {
+  en: ['Coldplay', 'Dua Lipa', 'Queen', 'Adele', 'The Beatles', 'Ed Sheeran', 'Harry Styles', 'Fleetwood Mac'],
+  es: ['Rosalía', 'C. Tangana', 'Bad Bunny', 'Álvaro Soler', 'Shakira', 'Enrique Iglesias', 'Alejandro Sanz', 'Rauw Alejandro'],
+  fr: ['Stromae', 'Daft Punk', 'Indila', 'Videoclub', 'Angèle', 'Zaz', 'Aya Nakamura', 'Orelsan'],
+  it: ['Andrea Bocelli', 'Måneskin', 'Lucio Dalla', 'Laura Pausini', 'Fabri Fibra', 'Ultimo', 'Annalisa', 'Mahmood', 'Zucchero'],
+  de: ['Rammstein', 'Nena', 'Kraftwerk', 'Cro', 'Peter Fox', 'Herbert Grönemeyer', 'AnnenMayKantereit']
+};
+
+const BILLBOARD_CACHE_KEY = 'polilyrics_billboard_pool_v1';
+
+function getCachedBillboardCovers() {
+  try {
+    const raw = localStorage.getItem(BILLBOARD_CACHE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length >= 15) {
+        return parsed;
+      }
+    }
+  } catch {}
+  return null;
+}
+
+function saveBillboardCoversToCache(covers) {
+  try {
+    if (Array.isArray(covers) && covers.length > 0) {
+      const unique = Array.from(new Set(covers)).slice(0, 90);
+      localStorage.setItem(BILLBOARD_CACHE_KEY, JSON.stringify(unique));
+    }
+  } catch {}
+}
+
+async function fetchItunesArtistAlbums(artistName) {
+  try {
+    const url = `https://itunes.apple.com/search?term=${encodeURIComponent(artistName)}&entity=album&limit=6`;
+    const res = await fetch(url);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return (data.results || [])
+      .map(item => item.artworkUrl100 ? item.artworkUrl100.replace('100x100bb', '200x200bb') : null)
+      .filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
+async function refreshBillboardPoolFromItunes() {
+  try {
+    // Pick 1 random artist from each of the 5 supported languages
+    const languages = Object.keys(BILLBOARD_SEED_ARTISTS);
+    const selectedArtists = languages.map(lang => {
+      const list = BILLBOARD_SEED_ARTISTS[lang];
+      return list[Math.floor(Math.random() * list.length)];
+    });
+
+    const results = await Promise.allSettled(
+      selectedArtists.map(artist => fetchItunesArtistAlbums(artist))
+    );
+
+    const newArtworks = results
+      .filter(r => r.status === 'fulfilled' && Array.isArray(r.value))
+      .flatMap(r => r.value);
+
+    if (newArtworks.length >= 8) {
+      const existing = getCachedBillboardCovers() || FALLBACK_BILLBOARD_COVERS;
+      const combined = shuffleArray(Array.from(new Set([...newArtworks, ...existing])));
+      saveBillboardCoversToCache(combined);
+    }
+  } catch {}
+}
 
 // Curated songs strictly from the 5 supported languages (Italian, French, Spanish, German, English)
 const SONGS_BATCH_1 = [
@@ -1651,12 +1723,19 @@ function initHeroBillboard() {
   // Rendering all 3 rows with full [Set A, Set A] eliminates the geometry jumps (glitch) and ensures
   // Row 2 (which starts at -50% translateX) has its second half fully populated from frame 0.
   setTimeout(() => {
-    const shuffled = shuffleArray(CURATED_BILLBOARD_COVERS);
+    const pool = getCachedBillboardCovers() || FALLBACK_BILLBOARD_COVERS;
+    const shuffled = shuffleArray(pool);
     const chunkSize = Math.ceil(shuffled.length / 3);
     renderBillboardRow('row-1', shuffled.slice(0, chunkSize));
     renderBillboardRow('row-2', shuffled.slice(chunkSize, chunkSize * 2));
     renderBillboardRow('row-3', shuffled.slice(chunkSize * 2));
   }, 120);
+
+  // 4. Background refresh: Query iTunes API for rotating artists across EN, ES, FR, IT, DE
+  // Runs after 1.2s when initial paint is completely idle, keeping the pool fresh for future refreshes
+  setTimeout(() => {
+    refreshBillboardPoolFromItunes();
+  }, 1200);
 }
 
 /**
