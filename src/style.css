@@ -98,132 +98,6 @@
   --gold-border: var(--accent-gold-border);
 }
 
-/* Light Theme Variables */
-:root[data-theme="light"],
-[data-theme="light"] {
-  /* Crisp Editorial Light Palette */
-  --bg-canvas: #f8fafc;
-  --bg-surface: #ffffff;
-  --bg-surface-elevated: #f1f5f9;
-  --bg-surface-hover: #e2e8f0;
-  --bg-surface-active: #cbd5e1;
-  --bg-header: rgba(255, 255, 255, 0.92);
-  --bg-bottom-bar: rgba(255, 255, 255, 0.95);
-  --bg-overlay: rgba(15, 23, 42, 0.50);
-  --bg-input: #ffffff;
-  --bg-input-focus: #ffffff;
-  --bg-modal: #ffffff;
-
-  /* High-Contrast Vibrant Orange for Light Backgrounds */
-  --accent-gold: #ea580c;
-  --accent-gold-hover: #c2410c;
-  --accent-gold-active: #9a3412;
-  --accent-gold-subtle: rgba(234, 88, 12, 0.12);
-  --accent-gold-border: rgba(234, 88, 12, 0.30);
-  --accent-gold-contrast: #ffffff;
-
-  /* Editorial Warm Orange-Brown for Translated Lyrics */
-  --text-champagne: #c2410c;
-  --text-champagne-subtle: rgba(194, 65, 12, 0.75);
-
-  /* Audio Engineering Meters & Precision Signals */
-  --meter-advance: #ea580c;
-  --meter-delay: #0284c7;
-  --accent-emerald: #059669;
-  --emerald-subtle: rgba(5, 150, 105, 0.12);
-  --emerald-border: rgba(5, 150, 105, 0.28);
-  --accent-danger: #dc2626;
-
-  /* Typography */
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-tertiary: #64748b;
-  --text-faint: #94a3b8;
-
-  /* Borders */
-  --border-subtle: rgba(15, 23, 42, 0.08);
-  --border-medium: rgba(15, 23, 42, 0.14);
-  --border-strong: rgba(15, 23, 42, 0.24);
-  --border-focus: var(--accent-gold);
-
-  /* Shadows */
-  --shadow-subtle: 0 1px 2px rgba(15, 23, 42, 0.06);
-  --shadow-card: 0 4px 16px rgba(15, 23, 42, 0.08);
-  --shadow-floating: 0 16px 36px -4px rgba(15, 23, 42, 0.12);
-  --shadow-modal: 0 24px 64px -8px rgba(15, 23, 42, 0.18);
-
-  /* Legacy variable alias bridges */
-  --bg-base: var(--bg-canvas);
-  --accent-primary: var(--accent-gold);
-  --accent-primary-hover: var(--accent-gold-hover);
-  --accent-cyan: var(--meter-delay);
-  --accent-pink: var(--accent-gold);
-  --accent-teal: var(--accent-gold);
-  --active-glow: rgba(234, 88, 12, 0.15);
-  --active-bg: var(--accent-gold-subtle);
-  --gold-subtle: var(--accent-gold-subtle);
-  --gold-border: var(--accent-gold-border);
-}
-
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme="dark"]) {
-    --bg-canvas: #f8fafc;
-    --bg-surface: #ffffff;
-    --bg-surface-elevated: #f1f5f9;
-    --bg-surface-hover: #e2e8f0;
-    --bg-surface-active: #cbd5e1;
-    --bg-header: rgba(255, 255, 255, 0.92);
-    --bg-bottom-bar: rgba(255, 255, 255, 0.95);
-    --bg-overlay: rgba(15, 23, 42, 0.50);
-    --bg-input: #ffffff;
-    --bg-input-focus: #ffffff;
-    --bg-modal: #ffffff;
-
-    --accent-gold: #ea580c;
-    --accent-gold-hover: #c2410c;
-    --accent-gold-active: #9a3412;
-    --accent-gold-subtle: rgba(234, 88, 12, 0.12);
-    --accent-gold-border: rgba(234, 88, 12, 0.30);
-    --accent-gold-contrast: #ffffff;
-
-    --text-champagne: #c2410c;
-    --text-champagne-subtle: rgba(194, 65, 12, 0.75);
-
-    --meter-advance: #ea580c;
-    --meter-delay: #0284c7;
-    --accent-emerald: #059669;
-    --emerald-subtle: rgba(5, 150, 105, 0.12);
-    --emerald-border: rgba(5, 150, 105, 0.28);
-    --accent-danger: #dc2626;
-
-    --text-primary: #0f172a;
-    --text-secondary: #475569;
-    --text-tertiary: #64748b;
-    --text-faint: #94a3b8;
-
-    --border-subtle: rgba(15, 23, 42, 0.08);
-    --border-medium: rgba(15, 23, 42, 0.14);
-    --border-strong: rgba(15, 23, 42, 0.24);
-    --border-focus: var(--accent-gold);
-
-    --shadow-subtle: 0 1px 2px rgba(15, 23, 42, 0.06);
-    --shadow-card: 0 4px 16px rgba(15, 23, 42, 0.08);
-    --shadow-floating: 0 16px 36px -4px rgba(15, 23, 42, 0.12);
-    --shadow-modal: 0 24px 64px -8px rgba(15, 23, 42, 0.18);
-
-    --bg-base: var(--bg-canvas);
-    --accent-primary: var(--accent-gold);
-    --accent-primary-hover: var(--accent-gold-hover);
-    --accent-cyan: var(--meter-delay);
-    --accent-pink: var(--accent-gold);
-    --accent-teal: var(--accent-gold);
-    --active-glow: rgba(234, 88, 12, 0.15);
-    --active-bg: var(--accent-gold-subtle);
-    --gold-subtle: var(--accent-gold-subtle);
-    --gold-border: var(--accent-gold-border);
-  }
-}
-
 /* ==========================================================================
    2. Reset & Global Foundations
    ========================================================================== */
@@ -632,41 +506,6 @@ button,
   flex-shrink: 0;
 }
 
-/* Theme Toggle Button */
-.theme-toggle-btn {
-  width: 36px;
-  height: 36px;
-  padding: 0;
-  border-radius: var(--radius-md);
-  background: var(--bg-surface-elevated);
-  border: 1px solid var(--border-subtle);
-  color: var(--text-secondary);
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: all var(--transition-fast);
-  flex-shrink: 0;
-}
-
-.theme-toggle-btn:hover {
-  background: var(--bg-surface-hover);
-  color: var(--text-primary);
-  border-color: var(--border-medium);
-  transform: scale(1.03);
-}
-
-.theme-toggle-btn:active {
-  transform: scale(0.96);
-}
-
-.theme-toggle-btn svg {
-  width: 17px;
-  height: 17px;
-}
-
-
-
 .control-group {
   display: flex;
   align-items: center;
@@ -902,12 +741,6 @@ button,
   background-color: #0f172a;
 }
 
-[data-theme="light"] .cover-card {
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  background-color: #e2e8f0;
-}
-
 @media (min-width: 640px) {
   .cover-card {
     width: 9rem;
@@ -948,10 +781,6 @@ button,
   -webkit-transform-origin: center center;
 }
 
-[data-theme="light"] .billboard-background-wrapper {
-  opacity: 0.75;
-}
-
 .billboard-row-container {
   display: flex;
   overflow: hidden;
@@ -978,10 +807,6 @@ button,
   pointer-events: none;
   z-index: 1;
   background: linear-gradient(to bottom, rgba(2, 6, 23, 0.15) 0%, rgba(2, 6, 23, 0.40) 50%, rgba(2, 6, 23, 0.60) 100%);
-}
-
-[data-theme="light"] .billboard-vignette-overlay {
-  background: linear-gradient(to bottom, rgba(248, 250, 252, 0.20) 0%, rgba(248, 250, 252, 0.45) 50%, rgba(248, 250, 252, 0.65) 100%);
 }
 
 /* Hero Search Landing Main Layout */
@@ -1077,11 +902,6 @@ button,
   text-shadow: 0 2px 24px rgba(0, 0, 0, 0.85), 0 2px 8px rgba(0, 0, 0, 0.65);
 }
 
-[data-theme="light"] .hero-title {
-  color: #0f172a;
-  text-shadow: 0 1px 16px rgba(255, 255, 255, 0.95), 0 0 32px rgba(255, 255, 255, 0.9);
-}
-
 .hero-gradient-text {
   background: linear-gradient(to right, #fb923c, #f59e0b);
   -webkit-background-clip: text;
@@ -1098,12 +918,6 @@ button,
   margin-bottom: 2rem;
   font-weight: 500;
   text-shadow: 0 2px 16px rgba(0, 0, 0, 0.85), 0 1px 4px rgba(0, 0, 0, 0.7);
-}
-
-[data-theme="light"] .hero-subtitle {
-  color: #1e293b;
-  font-weight: 500;
-  text-shadow: 0 1px 12px rgba(255, 255, 255, 0.95), 0 0 24px rgba(255, 255, 255, 0.9);
 }
 
 /* Search Bar Component */
@@ -1130,20 +944,9 @@ button,
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
-[data-theme="light"] .hero-search-form {
-  background: rgba(255, 255, 255, 0.88);
-  border-color: rgba(203, 213, 225, 0.85);
-  box-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.08);
-}
-
 .hero-search-form:focus-within {
   border-color: rgba(249, 115, 22, 0.60);
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(249, 115, 22, 0.4);
-}
-
-[data-theme="light"] .hero-search-form:focus-within {
-  border-color: rgba(234, 88, 12, 0.70);
-  box-shadow: 0 20px 30px -10px rgba(234, 88, 12, 0.15), 0 0 0 1px rgba(234, 88, 12, 0.4);
 }
 
 .hero-search-icon {
@@ -1169,10 +972,6 @@ button,
   color: #ffffff;
   padding: 0.5rem 0.25rem;
   width: 100%;
-}
-
-[data-theme="light"] .hero-search-input {
-  color: #0f172a;
 }
 
 .hero-search-input::placeholder {
@@ -1250,13 +1049,6 @@ button,
   overflow-y: auto;
 }
 
-[data-theme="light"] .hero-suggestions-dropdown {
-  background-color: #ffffff !important;
-  background: rgba(255, 255, 255, 0.98) !important;
-  border-color: rgba(203, 213, 225, 0.95);
-  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.25);
-}
-
 .hero-search-landing:has(#hero-suggestions-dropdown:not(.hidden)) .hero-songs-footer {
   opacity: 0.20;
   pointer-events: none;
@@ -1316,23 +1108,11 @@ button,
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 
-[data-theme="light"] .song-pill {
-  background: rgba(255, 255, 255, 0.85);
-  border-color: rgba(226, 232, 240, 0.90);
-  color: #475569;
-}
-
 .song-pill:hover {
   border-color: rgba(249, 115, 22, 0.50);
   color: #ffffff;
   background: rgba(30, 41, 59, 0.95);
   transform: translateY(-1px);
-}
-
-[data-theme="light"] .song-pill:hover {
-  background: #ffffff;
-  color: #ea580c;
-  border-color: rgba(234, 88, 12, 0.60);
 }
 
 .song-pill:active {
@@ -1349,20 +1129,12 @@ button,
   color: #f1f5f9;
 }
 
-[data-theme="light"] .song-pill-artist {
-  color: #0f172a;
-}
-
 .song-pill-divider {
   color: #64748b;
 }
 
 .song-pill-title {
   color: #94a3b8;
-}
-
-[data-theme="light"] .song-pill-title {
-  color: #64748b;
 }
 
 /* ==========================================================================
@@ -3559,16 +3331,8 @@ button,
     opacity: 0.85;
   }
 
-  [data-theme="light"] .billboard-background-wrapper {
-    opacity: 0.75;
-  }
-
   .billboard-vignette-overlay {
     background: linear-gradient(to bottom, rgba(2, 6, 23, 0.15) 0%, rgba(2, 6, 23, 0.40) 50%, rgba(2, 6, 23, 0.60) 100%);
-  }
-
-  [data-theme="light"] .billboard-vignette-overlay {
-    background: linear-gradient(to bottom, rgba(248, 250, 252, 0.20) 0%, rgba(248, 250, 252, 0.45) 50%, rgba(248, 250, 252, 0.65) 100%);
   }
 
   .billboard-row-container {

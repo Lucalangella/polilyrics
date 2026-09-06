@@ -2818,64 +2818,11 @@ function initPWA() {
 }
 
 /**
- * Theme Management: Light & Dark Mode
- */
-function initTheme() {
-  const themeToggleBtn = document.getElementById('theme-toggle-btn');
-  const metaThemeColor = document.querySelector('meta[name="theme-color"]');
-
-  function getActiveTheme() {
-    return document.documentElement.getAttribute('data-theme') || 'dark';
-  }
-
-  function updateThemeUI(theme) {
-    document.documentElement.setAttribute('data-theme', theme);
-    if (metaThemeColor) {
-      metaThemeColor.setAttribute('content', theme === 'light' ? '#f8fafc' : '#020617');
-    }
-    if (themeToggleBtn) {
-      const iconSun = themeToggleBtn.querySelector('.icon-sun');
-      const iconMoon = themeToggleBtn.querySelector('.icon-moon');
-      if (iconSun && iconMoon) {
-        // In dark mode: show sun icon (click to make light)
-        // In light mode: show moon icon (click to make dark)
-        iconSun.classList.toggle('hidden', theme === 'light');
-        iconMoon.classList.toggle('hidden', theme !== 'light');
-      }
-      const label = theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode';
-      themeToggleBtn.setAttribute('title', label);
-      themeToggleBtn.setAttribute('aria-label', label);
-    }
-  }
-
-  // Sync icons with initial theme
-  updateThemeUI(getActiveTheme());
-
-  if (themeToggleBtn) {
-    themeToggleBtn.addEventListener('click', () => {
-      const current = getActiveTheme();
-      const next = current === 'light' ? 'dark' : 'light';
-      localStorage.setItem('polilyrics_theme', next);
-      updateThemeUI(next);
-    });
-  }
-
-  // Auto-respond to system preference changes if user has not set an explicit override
-  try {
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: light)');
-    mediaQuery.addEventListener('change', (e) => {
-      if (!localStorage.getItem('polilyrics_theme')) {
-        updateThemeUI(e.matches ? 'light' : 'dark');
-      }
-    });
-  } catch {}
-}
-
-/**
  * Application Bootstrap
  */
 function initApp() {
-  initTheme();
+  document.documentElement.setAttribute('data-theme', 'dark');
+  try { localStorage.removeItem('polilyrics_theme'); } catch (e) {}
   initLanguageRouting();
   initTrackSelection();
   initEvents();
