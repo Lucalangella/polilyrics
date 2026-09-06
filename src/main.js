@@ -519,6 +519,21 @@ function updateLyricsLoadingProgress(message) {
 let currentTranslationRequestId = 0;
 
 /**
+ * Builds a line translations map, avoiding saving unfulfilled identical copies as translations
+ */
+function buildTrackLineTranslations(l, targetLang) {
+  const translations = { en: l.original };
+  if (l.translated) {
+    const hasLetters = /[a-zA-Z\u00C0-\u024F\u1E00-\u1EFF]/.test(l.original);
+    const isIdentical = hasLetters && l.translated.trim().toLowerCase() === l.original.trim().toLowerCase();
+    if (!isIdentical || targetLang === 'en') {
+      translations[targetLang] = l.translated;
+    }
+  }
+  return translations;
+}
+
+/**
  * Load and Render Synchronized Lyrics
  * Dynamically switches translation language without interrupting ongoing playback.
  * If translations for the chosen language are already cached, rows update immediately in place.
@@ -533,13 +548,19 @@ async function reloadLyrics() {
   const targetLangObj = SUPPORTED_LANGUAGES.find((l) => l.code === targetLang);
   const targetLangName = targetLangObj ? targetLangObj.name : targetLang.toUpperCase();
 
-  // 1. Check if all lines already have the target translation
+  // 1. Check if all lines already have genuine target translation
   const isTargetSameAsSource = track.sourceLanguage && track.sourceLanguage === targetLang;
-  const hasCachedTranslation = track.lyrics.every(
-    (l) => (l.translations && l.translations[targetLang]) || isTargetSameAsSource
-  );
+  const hasCachedTranslation = !isTargetSameAsSource && track.lyrics.every((l) => {
+    if (!l.translations || !l.translations[targetLang]) return false;
+    const trans = l.translations[targetLang];
+    const hasLetters = /[a-zA-Z\u00C0-\u024F\u1E00-\u1EFF]/.test(l.original);
+    if (targetLang !== 'en' && hasLetters && trans.trim().toLowerCase() === l.original.trim().toLowerCase()) {
+      return false;
+    }
+    return true;
+  });
 
-  if (hasCachedTranslation) {
+  if (hasCachedTranslation || isTargetSameAsSource) {
     currentLyrics = getSynchronizedLyrics(currentTrackId, targetLang);
 
     // If DOM already contains rows matching length, update translated text in place
@@ -993,10 +1014,7 @@ async function loadSongFromSearchResult(item) {
     start: l.start,
     end: l.end,
     original: l.original,
-    translations: {
-      [targetLang]: l.translated,
-      en: l.original
-    },
+    translations: buildTrackLineTranslations(l, targetLang),
     glossary: {}
   }));
 
@@ -1062,10 +1080,7 @@ async function handleDirectYouTubeLoad() {
         start: l.start,
         end: l.end,
         original: l.original,
-        translations: {
-          [targetLang]: l.translated,
-          en: l.original
-        },
+        translations: buildTrackLineTranslations(l, targetLang),
         glossary: {}
       }));
 
@@ -2073,10 +2088,7 @@ async function playSelectedVideoWithLyrics(video, prefetchedLrc = null) {
     start: l.start,
     end: l.end,
     original: l.original,
-    translations: {
-      [targetLang]: l.translated,
-      en: l.original
-    },
+    translations: buildTrackLineTranslations(l, targetLang),
     glossary: {}
   }));
 

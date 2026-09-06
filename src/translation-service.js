@@ -1,10 +1,10 @@
 /**
  * Dynamic Translation Service
  * Translates arbitrary lyric lines into target languages (it, es, en, fr, de)
- * with robust local caching.
+ * with robust multi-tiered endpoints and local caching.
  */
 
-const CACHE_PREFIX = 'lyricist_trans_v2_';
+const CACHE_PREFIX = 'polilyrics_trans_v3_';
 
 /**
  * Fast zero-dependency language detector for song lyrics
@@ -55,15 +55,34 @@ class TranslationService {
       const keysToRemove = [];
       for (let i = 0; i < localStorage.length; i++) {
         const k = localStorage.key(i);
-        if (k && (k.startsWith('lingo_trans_') || k.startsWith(CACHE_PREFIX))) {
+        if (
+          k &&
+          (k.startsWith('lingo_trans_') ||
+           k.startsWith('lyricist_trans_') ||
+           k.startsWith(CACHE_PREFIX))
+        ) {
+          // Immediately prune legacy namespaces
+          if (k.startsWith('lingo_trans_') || k.startsWith('lyricist_trans_')) {
+            keysToRemove.push(k);
+            continue;
+          }
+
           const val = localStorage.getItem(k);
           if (
             !val ||
             val.includes('INVALID LANGUAGE PAIR') ||
             val.includes('MYMEMORY WARNING') ||
-            val.includes('chiamma Giro') ||
-            k.startsWith('lingo_trans_')
+            val.includes('chiamma Giro')
           ) {
+            keysToRemove.push(k);
+            continue;
+          }
+
+          // If cached value is identical to the key for non-English, it was an unfulfilled fallback
+          const targetLang = k.slice(CACHE_PREFIX.length, CACHE_PREFIX.length + 2);
+          const origText = k.slice(CACHE_PREFIX.length + 3);
+          const hasLetters = /[a-zA-Z\u00C0-\u024F\u1E00-\u1EFF]/.test(origText);
+          if (targetLang !== 'en' && hasLetters && val.trim().toLowerCase() === origText.trim().toLowerCase()) {
             keysToRemove.push(k);
           }
         }
@@ -82,59 +101,84 @@ class TranslationService {
   }
 
   /**
-   * Gets cached translation if available
+   * Gets cached translation if available and valid
    */
   getFromCache(text, targetLang) {
-    const key = this.getCacheKey(text, targetLang);
-    if (this.memoryCache.has(key)) {
-      const val = this.memoryCache.get(key);
-      if (val && !val.includes('INVALID') && !val.includes('chiamma Giro')) return val;
-    }
-    try {
-      const stored = localStorage.getItem(key);
-      if (stored) {
-        if (stored.includes('INVALID') || stored.includes('MYMEMORY WARNING') || stored.includes('chiamma Giro')) {
-          localStorage.removeItem(key);
-          return null;
+    if (!text) return null;
+    const clean = text.trim();
+    const key = this.getCacheKey(clean, targetLang);
+
+    let val = this.memoryCache.get(key);
+    if (!val) {
+      try {
+        val = localStorage.getItem(key);
+        if (val) {
+          this.memoryCache.set(key, val);
         }
-        this.memoryCache.set(key, stored);
-        return stored;
+      } catch {
+        // ignore
       }
-    } catch {
-      // ignore
     }
-    return null;
+
+    if (!val) return null;
+
+    // Invalidate garbage or identical strings when expecting a foreign language
+    const hasLetters = /[a-zA-Z\u00C0-\u024F\u1E00-\u1EFF]/.test(clean);
+    if (
+      val.includes('INVALID') ||
+      val.includes('MYMEMORY WARNING') ||
+      val.includes('chiamma Giro') ||
+      (targetLang !== 'en' && hasLetters && val.trim().toLowerCase() === clean.toLowerCase())
+    ) {
+      this.memoryCache.delete(key);
+      try {
+        localStorage.removeItem(key);
+      } catch {}
+      return null;
+    }
+
+    return val;
   }
 
   /**
    * Saves translation to cache
    */
   saveToCache(text, targetLang, translated) {
+    if (!text || !translated) return;
+    const cleanText = text.trim();
+    const cleanTrans = translated.trim();
+
     if (
-      !translated ||
-      translated.includes('INVALID LANGUAGE PAIR') ||
-      translated.includes('MYMEMORY WARNING') ||
-      translated.includes('chiamma Giro')
+      !cleanTrans ||
+      cleanTrans.includes('INVALID LANGUAGE PAIR') ||
+      cleanTrans.includes('MYMEMORY WARNING') ||
+      cleanTrans.includes('chiamma Giro')
     ) {
       return;
     }
-    const key = this.getCacheKey(text, targetLang);
-    this.memoryCache.set(key, translated);
+
+    // Never cache identical text as a translation for another language if it contains words
+    const hasLetters = /[a-zA-Z\u00C0-\u024F\u1E00-\u1EFF]/.test(cleanText);
+    if (targetLang !== 'en' && hasLetters && cleanTrans.toLowerCase() === cleanText.toLowerCase()) {
+      return;
+    }
+
+    const key = this.getCacheKey(cleanText, targetLang);
+    this.memoryCache.set(key, cleanTrans);
     try {
-      localStorage.setItem(key, translated);
+      localStorage.setItem(key, cleanTrans);
     } catch {
       // ignore quota errors
     }
   }
 
   /**
-   * Translates a single phrase via Google Translate Neural API with MyMemory fallback
+   * Translates a single phrase via Google Chrome Extension Neural API with MyMemory fallback
    * @param {string} text
    * @param {string} targetLang
-   * @param {string} sourceLang
    * @returns {Promise<string>}
    */
-  async translatePhrase(text, targetLang = 'it', sourceLang = 'auto') {
+  async translatePhrase(text, targetLang = 'it') {
     const clean = text.trim();
     if (!clean) return '';
 
@@ -142,44 +186,38 @@ class TranslationService {
     const cached = this.getFromCache(clean, targetLang);
     if (cached) return cached;
 
-    // Detect source language if set to auto
-    let src = sourceLang;
-    if (!src || src === 'auto') {
-      src = detectLanguage(clean);
-    }
+    // 1. Google Translate Neural API (High quality, no rate-limit blocking)
+    const googleUrls = [
+      `https://clients5.google.com/translate_a/t?client=dict-chrome-ex&sl=auto&tl=${targetLang}&q=${encodeURIComponent(clean)}`,
+      `https://translate.googleapis.com/translate_a/t?client=dict-chrome-ex&sl=auto&tl=${targetLang}&q=${encodeURIComponent(clean)}`
+    ];
 
-    // If source and target are identical, no translation needed
-    if (src.toLowerCase() === targetLang.toLowerCase()) {
-      this.saveToCache(clean, targetLang, clean);
-      return clean;
-    }
-
-    // 1. Google Translate Neural API (High quality, zero crowdsourced jokes)
-    try {
-      const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${src}&tl=${targetLang}&dt=t&q=${encodeURIComponent(clean)}`;
-      const res = await fetch(url);
-      if (res.ok) {
-        const data = await res.json();
-        if (Array.isArray(data) && Array.isArray(data[0])) {
-          const translated = data[0].map((item) => item[0]).join('').trim();
-          if (translated) {
-            this.saveToCache(clean, targetLang, translated);
-            return translated;
+    for (const url of googleUrls) {
+      try {
+        const res = await fetch(url);
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data) && data.length > 0) {
+            const first = data[0];
+            const trans = (Array.isArray(first) ? first[0] : first)?.trim();
+            if (trans) {
+              this.saveToCache(clean, targetLang, trans);
+              return trans;
+            }
           }
         }
+      } catch (err) {
+        // Try next endpoint
       }
-    } catch (err) {
-      console.warn('Google Translate phrase error:', err);
     }
 
     // 2. MyMemory fallback
-    const langPair = `${src}|${targetLang}`;
     try {
-      const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(clean)}&langpair=${langPair}`;
+      const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(clean)}&langpair=autodetect|${targetLang}`;
       const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
-        const translated = data?.responseData?.translatedText;
+        const translated = data?.responseData?.translatedText?.trim();
         if (
           translated &&
           !translated.startsWith('MYMEMORY WARNING') &&
@@ -202,27 +240,36 @@ class TranslationService {
    * Translates multiple lines in a single batch request via Google Translate
    * @param {string[]} linesArray
    * @param {string} targetLang
-   * @param {string} sourceLang
    * @returns {Promise<string[]|null>}
    */
-  async translateBatchGoogle(linesArray, targetLang, sourceLang = 'auto') {
+  async translateBatchGoogle(linesArray, targetLang) {
     if (!linesArray || linesArray.length === 0) return [];
-    const q = linesArray.join('\n');
-    try {
-      const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sourceLang}&tl=${targetLang}&dt=t&q=${encodeURIComponent(q)}`;
-      const res = await fetch(url);
-      if (res.ok) {
-        const data = await res.json();
-        if (Array.isArray(data) && Array.isArray(data[0])) {
-          const rawJoined = data[0].map((item) => item[0]).join('');
-          const splitted = rawJoined.split('\n').map((l) => l.trim());
-          if (splitted.length === linesArray.length) {
-            return splitted;
+    const body = linesArray.map((l) => `q=${encodeURIComponent(l)}`).join('&');
+
+    const googleEndpoints = [
+      `https://clients5.google.com/translate_a/t?client=dict-chrome-ex&sl=auto&tl=${targetLang}`,
+      `https://translate.googleapis.com/translate_a/t?client=dict-chrome-ex&sl=auto&tl=${targetLang}`
+    ];
+
+    for (const url of googleEndpoints) {
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data) && data.length === linesArray.length) {
+            return data.map((item) => {
+              if (Array.isArray(item)) return (item[0] || '').trim();
+              return typeof item === 'string' ? item.trim() : '';
+            });
           }
         }
+      } catch (err) {
+        // Try next endpoint
       }
-    } catch (err) {
-      console.warn('Google Translate batch error:', err);
     }
     return null;
   }
@@ -241,10 +288,6 @@ class TranslationService {
     const total = lines.length;
     let completed = 0;
 
-    // Detect overall dominant language across all lyrics lines
-    const sampleText = lines.slice(0, 10).map((l) => l.original).join(' ');
-    const dominantSourceLang = detectLanguage(sampleText);
-
     const results = lines.map((item) => ({
       start: item.start,
       end: item.end,
@@ -255,9 +298,11 @@ class TranslationService {
     // Identify indices that need fetching
     const pendingIndices = [];
     results.forEach((item, idx) => {
-      if (!this.getFromCache(item.original, targetLang)) {
+      const cached = this.getFromCache(item.original, targetLang);
+      if (!cached) {
         pendingIndices.push(idx);
       } else {
+        results[idx].translated = cached;
         completed++;
       }
     });
@@ -272,7 +317,7 @@ class TranslationService {
       const chunkOriginals = chunkIndices.map((idx) => lines[idx].original);
 
       // Attempt fast neural batch translation
-      const batchResult = await this.translateBatchGoogle(chunkOriginals, targetLang, dominantSourceLang);
+      const batchResult = await this.translateBatchGoogle(chunkOriginals, targetLang);
 
       if (batchResult && batchResult.length === chunkOriginals.length) {
         chunkIndices.forEach((origIdx, cIdx) => {
@@ -286,7 +331,7 @@ class TranslationService {
         await Promise.all(
           chunkIndices.map(async (origIdx) => {
             const originalText = lines[origIdx].original;
-            const translated = await this.translatePhrase(originalText, targetLang, dominantSourceLang);
+            const translated = await this.translatePhrase(originalText, targetLang);
             results[origIdx].translated = translated;
             completed++;
           })

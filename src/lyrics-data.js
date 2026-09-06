@@ -49,7 +49,11 @@ export function updateTrackTranslations(trackId, targetLang, translatedLines) {
     if (!item.translations) item.translations = {};
     const trans = translatedLines[idx]?.translated || translatedLines[idx];
     if (trans) {
-      item.translations[targetLang] = trans;
+      const hasLetters = /[a-zA-Z\u00C0-\u024F\u1E00-\u1EFF]/.test(item.original);
+      const isIdentical = hasLetters && trans.trim().toLowerCase() === item.original.trim().toLowerCase();
+      if (!isIdentical || targetLang === 'en') {
+        item.translations[targetLang] = trans;
+      }
     }
   });
 
@@ -69,6 +73,24 @@ function loadPersistedDynamicTracks() {
       if (Array.isArray(list)) {
         list.forEach((t) => {
           if (t && t.id) {
+            // Strip out any stale identical translations for non-English target languages
+            if (Array.isArray(t.lyrics)) {
+              t.lyrics.forEach((l) => {
+                if (l && l.translations && typeof l.original === 'string') {
+                  const hasLetters = /[a-zA-Z\u00C0-\u024F\u1E00-\u1EFF]/.test(l.original);
+                  for (const [lang, val] of Object.entries(l.translations)) {
+                    if (
+                      lang !== 'en' &&
+                      hasLetters &&
+                      typeof val === 'string' &&
+                      val.trim().toLowerCase() === l.original.trim().toLowerCase()
+                    ) {
+                      delete l.translations[lang];
+                    }
+                  }
+                }
+              });
+            }
             const idx = TRACKS.findIndex((existing) => existing.id === t.id);
             if (idx >= 0) {
               TRACKS[idx] = { ...TRACKS[idx], ...t };
